@@ -8,7 +8,7 @@ https://github.com/user-attachments/assets/2658408f-1de8-4ac3-b77e-a4b9875a9d0e
 - Autocomplete support for [baseline-todo](https://github.com/rviscomi/baseline-todo) syntax
 - Refer to Baseline info when hovering over [baseline-todo](https://github.com/rviscomi/baseline-todo) syntax
 
-<img width="777" alt="image" src="https://github.com/user-attachments/assets/42f7af9e-3480-46c5-8b20-7b2ed07b8ca2" />
+<img width="771" alt="image" src="https://github.com/user-attachments/assets/e40394c1-6075-4b70-b704-31dadad9a77f" />
 
 <!--
 
