@@ -1,6 +1,16 @@
 const vscode = require('vscode');
 
 let featureOptions = [];
+let browsers = {};
+const BROWSER_NAME = {
+	'chrome': 'Chrome',
+	'chrome_android': 'Chrome Android',
+	'firefox': 'Firefox',
+	'firefox_android': 'Firefox for Android',
+	'safari': 'Safari',
+	'safari_ios': 'Safari on iOS',
+	'edge': 'Edge'
+};
 
 async function loadWebFeatures() {
 	try {
@@ -20,9 +30,34 @@ function getBaselineStatus(status) {
 	return 'Limited availability';
 }
 
+function getBrowserName(browserId) {
+	const name = BROWSER_NAME[browserId];
+	if (!name) {
+		console.warn('Unknown browser ID:', browserId);
+	}
+	return name || browserId;
+}
+
+function getReleaseDate(browserId, version) {
+	const browser = browsers[browserId];
+	if (!browser) {
+		console.warn('Unknown browser ID:', browserId);
+		return 'Unknown';
+	}
+
+	const release = browser.releases.find(r => r.version === version);
+	if (!release) {
+		console.warn('Unknown version for browser', browserId, version);
+		return 'Unknown';
+	}
+
+	return release.date;
+}
+
 async function activate(context) {
 
 	const webFeatures = await loadWebFeatures();
+	browsers = webFeatures.browsers;
 	featureOptions = Object.entries(webFeatures.features).map(([featureId, feature]) => {
 		return Object.assign(feature, {
 			featureId,
@@ -94,28 +129,38 @@ async function handleBaselineHotPhrase(event) {
 
 class BaselineHoverProvider {
 	provideHover(document, position, token) {
-    const lineText = document.lineAt(position.line).text;
-    const match = lineText.match(/\bbaseline\/([a-z-]+)\b/);
+    const lineText = document.lineAt(position.line).text.substr(0, 100);
+    const match = lineText.match(/\bbaseline\/([a-z-]+)\b/i);
 		if (!match) {
 			return;
 		}
 
-		const featureId = match[1];
+		const featureId = match[1].toLowerCase();
 		const featureInfo = featureOptions.find(feature => feature.featureId == featureId);
 		if (!featureInfo) {
 			console.warn('Unable to get Baseline info for feature:', featureId);
 			return;
 		}
 
+		console.log(featureInfo)
 		const range = new vscode.Range(
 			position.line, match.index, position.line, match.index + match[0].length
 		);
 		const markdownString = new vscode.MarkdownString();
-		markdownString.appendMarkdown(`**${featureId}**
+		markdownString.appendMarkdown(`### ${featureInfo.name}
 
-${featureInfo.detail}
+Baseline ${featureInfo.baselineStatus}
 
-${featureInfo.baselineStatus}`);
+${featureInfo.description_html}
+
+Browser | Version | Relase date
+--- | --- | ---
+${Object.entries(featureInfo.status.support).map(([browser, version]) => {
+	const releaseDate = getReleaseDate(browser, version);
+	return `${getBrowserName(browser)} | ${version} | ${releaseDate}`;
+}).join('\n')}
+
+`);
 		return new vscode.Hover(markdownString, range);
 	}
 }
