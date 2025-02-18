@@ -1,6 +1,11 @@
 # baseline-vscode README
 
-https://github.com/user-attachments/assets/e59d1ebf-69f4-4536-83d2-e618a8d1aee9
+https://github.com/user-attachments/assets/2658408f-1de8-4ac3-b77e-a4b9875a9d0e
+
+## Features
+
+- Search for web platform features and get their Baseline info
+- Autocomplete support for baseline-todo syntax
 
 <!--
 

@@ -1,11 +1,11 @@
 const vscode = require('vscode');
 
 async function loadWebFeatures() {
-  try {
-    return await import('web-features');
-  } catch (error) {
-    console.error('Error importing web-features:', error);
-  }
+	try {
+		return await import('web-features');
+	} catch (error) {
+		console.error('Error importing web-features:', error);
+	}
 }
 
 function getBaselineStatus(status) {
@@ -31,8 +31,11 @@ async function activate(context) {
 		});
 	});
 
-	const disposable = vscode.commands.registerCommand('baseline-vscode.baselineSearch', () => runBaselineSearch(featureOptions));
+	let disposable = vscode.commands.registerCommand('baseline-vscode.baselineSearch', () => runBaselineSearch(featureOptions));
 	context.subscriptions.push(disposable);
+
+
+	vscode.workspace.onDidChangeTextDocument((event) => handleBaselineHotPhrase(event, featureOptions), null, context.subscriptions);
 }
 
 async function runBaselineSearch(featureOptions) {
@@ -59,7 +62,32 @@ async function runBaselineSearch(featureOptions) {
 	}
 }
 
-function deactivate() {}
+async function handleBaselineHotPhrase(event, featureOptions) {
+	const editor = vscode.window.activeTextEditor;
+	if (!editor || event.document !== editor.document || editor.document.lineCount === 0) {
+		return;
+	}
+
+	// Check if the line contains the "baseline/" hot phrase.
+	const position = editor.selection.active;
+	const linePrefix = editor.document.lineAt(position).text.substr(0, position.character + 1);
+	if (!linePrefix.endsWith('baseline/')) {
+		return;
+	}
+
+	// Search for the feature ID.
+	const selection = await vscode.window.showQuickPick(featureOptions);
+	if (!selection) {
+		return;
+	}
+
+	// Add the selected feature ID to the document.
+	editor.edit(editBuilder => {
+		editBuilder.insert(position.translate(0, 1), selection.featureId);
+	});
+}
+
+function deactivate() { }
 
 module.exports = {
 	activate,
