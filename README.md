@@ -6,6 +6,10 @@ https://github.com/user-attachments/assets/2658408f-1de8-4ac3-b77e-a4b9875a9d0e
 
 - Search for web platform features and get their Baseline info
 - Autocomplete support for baseline-todo syntax
+- Refer to Baseline info when hovering over baseline-todo syntax
+
+<img width="1106" alt="image" src="https://github.com/user-attachments/assets/347472a1-bcae-4c5e-948f-15345748025d" />
+
 
 <!--
 
