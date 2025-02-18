@@ -1,8 +1,9 @@
 const vscode = require('vscode');
 const path = require('path');
 
+let diagnosticCollection;
 let featureOptions = [];
-let browsers = {};
+let webFeatures = {};
 const BROWSER_NAME = {
 	'chrome': 'Chrome',
 	'chrome_android': 'Chrome Android',
@@ -23,8 +24,7 @@ async function loadWebFeatures() {
 
 async function activate(context) {
 
-	const webFeatures = await loadWebFeatures();
-	browsers = webFeatures.browsers;
+	webFeatures = await loadWebFeatures();
 	featureOptions = Object.entries(webFeatures.features).map(([featureId, feature]) => {
 		return Object.assign(feature, {
 			featureId,
@@ -35,6 +35,9 @@ async function activate(context) {
 		});
 	});
 
+	diagnosticCollection = vscode.languages.createDiagnosticCollection('baseline');
+	context.subscriptions.push(diagnosticCollection);
+
 	context.subscriptions.push(
 		vscode.commands.registerCommand('baseline-vscode.baselineSearch', runBaselineSearch)
 	);
@@ -42,7 +45,21 @@ async function activate(context) {
 		vscode.languages.registerHoverProvider({ pattern: '**' }, new BaselineHoverProvider(context))
 	);
 
-	vscode.workspace.onDidChangeTextDocument(handleBaselineHotPhrase, null, context.subscriptions);
+	vscode.workspace.textDocuments.forEach(document => {
+		validateBaselineFeatureIds(document);
+	});
+
+	vscode.workspace.onDidChangeTextDocument(event => {
+		handleBaselineHotPhrase(event);
+		validateBaselineFeatureIds(event.document);
+	}, null, context.subscriptions);
+	
+	vscode.workspace.onDidOpenTextDocument(document => {
+    validateBaselineFeatureIds(document);
+  });
+	vscode.workspace.onDidSaveTextDocument(document => {
+		validateBaselineFeatureIds(document);
+	});
 }
 
 async function runBaselineSearch() {
@@ -94,6 +111,28 @@ async function handleBaselineHotPhrase(event) {
 	});
 }
 
+function validateBaselineFeatureIds(document) {
+	const issues = [];
+	for (let i = 0; i < document.lineCount; i++) {
+		const line = document.lineAt(i).text;
+		const match = line.match(/\bbaseline\/([a-z-]+)\b/i);
+		if (!match) {
+			continue;
+		}
+
+		const featureId = match[1].toLowerCase();
+		if (isValidFeatureId(featureId)) {
+			continue;
+		}
+
+		const range = new vscode.Range(i, match.index, i, match.index + match[0].length);
+		const diagnostic = new vscode.Diagnostic(range, `Invalid feature ID: ${featureId}`, vscode.DiagnosticSeverity.Error);
+		issues.push(diagnostic);
+	}
+
+	diagnosticCollection.set(document.uri, issues);
+}
+
 class BaselineHoverProvider {
 	constructor(context) {
 		this.context = context;
@@ -110,7 +149,7 @@ class BaselineHoverProvider {
 		const featureId = match[1].toLowerCase();
 		const featureInfo = featureOptions.find(feature => feature.featureId == featureId);
 		if (!featureInfo) {
-			console.warn('Unable to get Baseline info for feature:', featureId);
+			// The feature ID is invalid and will be flagged by the diagnostic provider.
 			return;
 		}
 
@@ -156,7 +195,7 @@ function getBaselineImg(status) {
 }
 
 function getReleaseDate(browserId, version) {
-	const browser = browsers[browserId];
+	const browser = webFeatures.browsers[browserId];
 	if (!browser) {
 		console.warn('Unknown browser ID:', browserId);
 		return 'Unknown';
@@ -169,6 +208,10 @@ function getReleaseDate(browserId, version) {
 	}
 
 	return release.date;
+}
+
+function isValidFeatureId(featureId) {
+	return featureId in webFeatures.features;
 }
 
 function sanitizeFeatureName(featureName) {
