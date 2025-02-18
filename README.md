@@ -1,6 +1,6 @@
 # baseline-vscode README
 
-https://github.com/user-attachments/assets/eedb0b73-e639-482e-9734-bf5c5819d03b
+https://github.com/user-attachments/assets/e59d1ebf-69f4-4536-83d2-e618a8d1aee9
 
 <!--
 
