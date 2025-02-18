@@ -1,5 +1,9 @@
 # baseline-vscode README
 
+https://github.com/user-attachments/assets/eedb0b73-e639-482e-9734-bf5c5819d03b
+
+<!--
+
 This is the README for your extension "baseline-vscode". After writing up a brief description, we recommend including the following sections.
 
 ## Features
@@ -63,3 +67,5 @@ You can author your README using Visual Studio Code.  Here are some useful edito
 * [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
 
 **Enjoy!**
+
+-->
