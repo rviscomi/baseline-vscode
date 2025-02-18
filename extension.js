@@ -1,5 +1,7 @@
 const vscode = require('vscode');
 
+let featureOptions = [];
+
 async function loadWebFeatures() {
 	try {
 		return await import('web-features');
@@ -21,7 +23,7 @@ function getBaselineStatus(status) {
 async function activate(context) {
 
 	const webFeatures = await loadWebFeatures();
-	const featureOptions = Object.entries(webFeatures.features).map(([featureId, feature]) => {
+	featureOptions = Object.entries(webFeatures.features).map(([featureId, feature]) => {
 		return Object.assign(feature, {
 			featureId,
 			label: feature.name,
@@ -31,14 +33,17 @@ async function activate(context) {
 		});
 	});
 
-	let disposable = vscode.commands.registerCommand('baseline-vscode.baselineSearch', () => runBaselineSearch(featureOptions));
-	context.subscriptions.push(disposable);
+	context.subscriptions.push(
+		vscode.commands.registerCommand('baseline-vscode.baselineSearch', runBaselineSearch)
+	);
+	context.subscriptions.push(
+		vscode.languages.registerHoverProvider({ pattern: '**' }, new BaselineHoverProvider())
+	);
 
-
-	vscode.workspace.onDidChangeTextDocument((event) => handleBaselineHotPhrase(event, featureOptions), null, context.subscriptions);
+	vscode.workspace.onDidChangeTextDocument(handleBaselineHotPhrase, null, context.subscriptions);
 }
 
-async function runBaselineSearch(featureOptions) {
+async function runBaselineSearch() {
 	const feature = await vscode.window.showQuickPick(featureOptions, {
 		matchOnDetail: true,
 		placeHolder: 'Search for a web feature',
@@ -62,7 +67,7 @@ async function runBaselineSearch(featureOptions) {
 	}
 }
 
-async function handleBaselineHotPhrase(event, featureOptions) {
+async function handleBaselineHotPhrase(event) {
 	const editor = vscode.window.activeTextEditor;
 	if (!editor || event.document !== editor.document || editor.document.lineCount === 0) {
 		return;
@@ -85,6 +90,34 @@ async function handleBaselineHotPhrase(event, featureOptions) {
 	editor.edit(editBuilder => {
 		editBuilder.insert(position.translate(0, 1), selection.featureId);
 	});
+}
+
+class BaselineHoverProvider {
+	provideHover(document, position, token) {
+    const lineText = document.lineAt(position.line).text;
+    const match = lineText.match(/\bbaseline\/([a-z-]+)\b/);
+		if (!match) {
+			return;
+		}
+
+		const featureId = match[1];
+		const featureInfo = featureOptions.find(feature => feature.featureId == featureId);
+		if (!featureInfo) {
+			console.warn('Unable to get Baseline info for feature:', featureId);
+			return;
+		}
+
+		const range = new vscode.Range(
+			position.line, match.index, position.line, match.index + match[0].length
+		);
+		const markdownString = new vscode.MarkdownString();
+		markdownString.appendMarkdown(`**${featureId}**
+
+${featureInfo.detail}
+
+${featureInfo.baselineStatus}`);
+		return new vscode.Hover(markdownString, range);
+	}
 }
 
 function deactivate() { }
