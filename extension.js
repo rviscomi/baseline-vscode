@@ -23,7 +23,6 @@ async function loadWebFeatures() {
 }
 
 async function activate(context) {
-
 	webFeatures = await loadWebFeatures();
 	featureOptions = Object.entries(webFeatures.features).map(([featureId, feature]) => {
 		return Object.assign(feature, {
@@ -62,6 +61,10 @@ async function activate(context) {
 	});
 }
 
+
+function deactivate() { }
+
+
 async function runBaselineSearch() {
 	const feature = await vscode.window.showQuickPick(featureOptions, {
 		matchOnDetail: true,
@@ -75,7 +78,7 @@ async function runBaselineSearch() {
 
 	console.log(feature);
 	const selection = await vscode.window.showInformationMessage(
-		`${feature.featureId} is Baseline ${feature.baselineStatus}`,
+		`${feature.featureId} is ${feature.baselineStatus}`,
 		'Explore'
 	);
 	if (!selection) {
@@ -85,6 +88,7 @@ async function runBaselineSearch() {
 		vscode.env.openExternal(vscode.Uri.parse(`https://webstatus.dev/features/${feature.featureId}/`));
 	}
 }
+
 
 async function handleBaselineHotPhrase(event) {
 	const editor = vscode.window.activeTextEditor;
@@ -111,6 +115,7 @@ async function handleBaselineHotPhrase(event) {
 	});
 }
 
+
 function validateBaselineFeatureIds(document) {
 	const issues = [];
 	for (let i = 0; i < document.lineCount; i++) {
@@ -126,12 +131,13 @@ function validateBaselineFeatureIds(document) {
 		}
 
 		const range = new vscode.Range(i, match.index, i, match.index + match[0].length);
-		const diagnostic = new vscode.Diagnostic(range, `Invalid feature ID: ${featureId}`, vscode.DiagnosticSeverity.Error);
+		const diagnostic = new vscode.Diagnostic(range, `Unrecognized Baseline feature ID: ${featureId}\n\nTry using the "Baseline search" command to find the feature you're looking for.`, vscode.DiagnosticSeverity.Error);
 		issues.push(diagnostic);
 	}
 
 	diagnosticCollection.set(document.uri, issues);
 }
+
 
 class BaselineHoverProvider {
 	constructor(context) {
@@ -164,17 +170,17 @@ class BaselineHoverProvider {
 	}
 }
 
-function deactivate() { }
 
 function getBaselineStatus(status) {
 	if (status.baseline == 'low') {
-		return `Newly available since ${status.baseline_low_date}`;
+		return `Baseline Newly available since ${status.baseline_low_date}`;
 	}
 	if (status.baseline == 'high') {
-		return `Widely available since ${status.baseline_high_date}`;
+		return `Baseline Widely available since ${status.baseline_high_date}`;
 	}
-	return 'Limited availability';
+	return 'Limited availability across major browsers';
 }
+
 
 function getBrowserName(browserId) {
 	const name = BROWSER_NAME[browserId];
@@ -183,6 +189,7 @@ function getBrowserName(browserId) {
 	}
 	return name || browserId;
 }
+
 
 function getBaselineImg(status) {
 	if (status.baseline == 'low') {
@@ -193,6 +200,7 @@ function getBaselineImg(status) {
 	}
 	return 'baseline-limited-icon.png';
 }
+
 
 function getReleaseDate(browserId, version) {
 	const browser = webFeatures.browsers[browserId];
@@ -210,9 +218,11 @@ function getReleaseDate(browserId, version) {
 	return release.date;
 }
 
+
 function isValidFeatureId(featureId) {
 	return featureId in webFeatures.features;
 }
+
 
 function sanitizeFeatureName(featureName) {
 	if (featureName.startsWith('<')) {
@@ -221,13 +231,14 @@ function sanitizeFeatureName(featureName) {
 	return featureName;
 }
 
+
 function getFeatureMarkdown(feature) {
 	return `### ${sanitizeFeatureName(feature.name)}
 
 ${feature.description_html}
 
 <img src="https://web-platform-dx.github.io/web-features/assets/img/${getBaselineImg(feature.status)}" alt="Baseline icon" width="25" height="14" style="vertical-align: middle;" /> \
-Baseline ${feature.baselineStatus}
+${feature.baselineStatus}
 
 Browser version | Relase date
 --- | ---
@@ -236,6 +247,7 @@ ${Object.entries(feature.status.support).map(([browser, version]) => {
 }).join('\n')}
 `;
 }
+
 
 module.exports = {
 	activate,
