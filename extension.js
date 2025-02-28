@@ -96,10 +96,10 @@ async function handleBaselineHotPhrase(event) {
 		return;
 	}
 
-	// Check if the line contains the "baseline/" hot phrase.
+	// Check if the line contains either hot phrase.
 	const position = editor.selection.active;
 	const linePrefix = editor.document.lineAt(position).text.substr(0, position.character + 1);
-	if (!linePrefix.endsWith('baseline/')) {
+	if (!linePrefix.endsWith('baseline/') && !linePrefix.match(/<baseline-status[^>]*featureId=[\'"]?$/)) {
 		return;
 	}
 
