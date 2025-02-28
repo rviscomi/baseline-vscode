@@ -120,17 +120,18 @@ function validateBaselineFeatureIds(document) {
 	const issues = [];
 	for (let i = 0; i < document.lineCount; i++) {
 		const line = document.lineAt(i).text;
-		const match = line.match(/\bbaseline\/([a-z-]+)\b/i);
+		const match = line.match(/(?:\bbaseline\/([a-z-]+)\b|<baseline-status[^>]*featureId=[\'"]?([a-z-]+)[\'"]?)/i);
 		if (!match) {
 			continue;
 		}
 
-		const featureId = match[1].toLowerCase();
+		const featureId = (match[1] ?? match[2]).toLowerCase();
 		if (isValidFeatureId(featureId)) {
 			continue;
 		}
 
-		const range = new vscode.Range(i, match.index, i, match.index + match[0].length);
+		const startingIndex = match.index + match[0].indexOf(featureId);
+		const range = new vscode.Range(i, startingIndex, i, startingIndex +featureId.length);
 		const diagnostic = new vscode.Diagnostic(range, `Unrecognized Baseline feature ID: ${featureId}\n\nTry using the "Baseline search" command to find the feature you're looking for.`, vscode.DiagnosticSeverity.Error);
 		issues.push(diagnostic);
 	}
@@ -147,12 +148,12 @@ class BaselineHoverProvider {
 	provideHover(document, position, token) {
 		// TODO: match only when the cursor is positioned on the phrase itself.
     const lineText = document.lineAt(position.line).text.substr(0, 100);
-    const match = lineText.match(/\bbaseline\/([a-z-]+)\b/i);
+    const match = lineText.match(/(?:\bbaseline\/([a-z-]+)\b|<baseline-status[^>]*featureId=[\'"]?([a-z-]+)[\'"]?)/i);
 		if (!match) {
 			return;
 		}
 
-		const featureId = match[1].toLowerCase();
+		const featureId = (match[1] ?? match[2]).toLowerCase();
 		const featureInfo = featureOptions.find(feature => feature.featureId == featureId);
 		if (!featureInfo) {
 			// The feature ID is invalid and will be flagged by the diagnostic provider.
@@ -163,8 +164,10 @@ class BaselineHoverProvider {
 		markdownString.supportHtml = true;
 		markdownString.baseUri = vscode.Uri.file(path.join(this.context.extensionPath, 'img', path.sep));
 		markdownString.appendMarkdown(getFeatureMarkdown(featureInfo));
+
+		const startingIndex = match.index + match[0].indexOf(featureId);
 		const range = new vscode.Range(
-			position.line, match.index, position.line, match.index + match[0].length
+			position.line, startingIndex, position.line, startingIndex + featureId.length
 		);
 		return new vscode.Hover(markdownString, range);
 	}
