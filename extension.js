@@ -146,7 +146,6 @@ class BaselineHoverProvider {
 	}
 
 	provideHover(document, position, token) {
-		// TODO: match only when the cursor is positioned on the phrase itself.
     const lineText = document.lineAt(position.line).text.substr(0, 100);
     const match = lineText.match(/(?:\bbaseline\/([a-z-]+)\b|<baseline-status[^>]*featureId=[\'"]?([a-z-]+)[\'"]?)/i);
 		if (!match) {
@@ -160,12 +159,17 @@ class BaselineHoverProvider {
 			return;
 		}
 
+		const startingIndex = match.index + match[0].indexOf(featureId);
+		if (position.character < startingIndex || position.character > startingIndex + featureId.length) {
+			// The cursor is not positioned on the feature ID.
+			return;
+		}
+
 		const markdownString = new vscode.MarkdownString();
 		markdownString.supportHtml = true;
 		markdownString.baseUri = vscode.Uri.file(path.join(this.context.extensionPath, 'img', path.sep));
 		markdownString.appendMarkdown(getFeatureMarkdown(featureInfo));
 
-		const startingIndex = match.index + match[0].indexOf(featureId);
 		const range = new vscode.Range(
 			position.line, startingIndex, position.line, startingIndex + featureId.length
 		);
