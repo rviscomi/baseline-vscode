@@ -7,11 +7,11 @@ let webFeatures = {};
 const BROWSER_NAME = {
 	'chrome': 'Chrome',
 	'chrome_android': 'Chrome Android',
-	'firefox': 'Firefox',
-	'firefox_android': 'Firefox for Android',
+	'edge': 'Edge',
 	'safari': 'Safari',
 	'safari_ios': 'Safari on iOS',
-	'edge': 'Edge'
+	'firefox': 'Firefox',
+	'firefox_android': 'Firefox for Android'
 };
 
 async function loadWebFeatures() {
@@ -120,6 +120,7 @@ function validateBaselineFeatureIds(document) {
 	const issues = [];
 	for (let i = 0; i < document.lineCount; i++) {
 		const line = document.lineAt(i).text;
+		// TODO: handle multiple matches per line
 		const match = line.match(/(?:\bbaseline\/([a-z-]+)\b|<baseline-status[^>]*featureId=[\'"]?([a-z-]+)[\'"]?)/i);
 		if (!match) {
 			continue;
@@ -147,6 +148,7 @@ class BaselineHoverProvider {
 
 	provideHover(document, position, token) {
     const lineText = document.lineAt(position.line).text.substr(0, 100);
+		// TODO: handle multiple matches per line
     const match = lineText.match(/(?:\bbaseline\/([a-z-]+)\b|<baseline-status[^>]*featureId=[\'"]?([a-z-]+)[\'"]?)/i);
 		if (!match) {
 			return;
@@ -249,7 +251,11 @@ ${feature.baselineStatus}
 
 Browser version | Relase date
 --- | ---
-${Object.entries(feature.status.support).map(([browser, version]) => {
+${Object.keys(BROWSER_NAME).map((browser) => {
+	const version = feature.status.support[browser];
+	if (!version) {
+		return `${getBrowserName(browser)} | 🅇`;
+	}
 	return `${getBrowserName(browser)} ${version} | ${getReleaseDate(browser, version)}`;
 }).join('\n')}
 `;
