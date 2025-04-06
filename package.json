@@ -20,8 +20,8 @@
         "title": "Baseline search"
       },
       {
-      "command": "baseline-vscode.scanBaselineTodos",
-      "title": "Baseline scan"
+        "command": "baseline-vscode.scanBaselineTodos",
+        "title": "Baseline scan"
       }
     ]
   },
