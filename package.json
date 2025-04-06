@@ -18,6 +18,10 @@
       {
         "command": "baseline-vscode.baselineSearch",
         "title": "Baseline search"
+      },
+      {
+      "command": "baseline-vscode.scanBaselineTodos",
+      "title": "Baseline scan"
       }
     ]
   },
