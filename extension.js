@@ -366,35 +366,42 @@ class BaselineTodoPanel {
 
 async function scanBaselineTodos(context) {
 	const panel = new BaselineTodoPanel(context);
+	const todos = [];
 
 	try {
-		const workspaceFolder = vscode.workspace.workspaceFolders[0];
-		if (!workspaceFolder) {
+		const workspaceFolders = vscode.workspace.workspaceFolders;
+		if (!workspaceFolders || workspaceFolders.length === 0) {
 			vscode.window.showErrorMessage('No workspace folder found');
 			return;
 		}
 
-		const gitignore = await vscode.workspace.fs.readFile(vscode.Uri.joinPath(workspaceFolder.uri, '.gitignore'))
-			.then(data => data.toString().split('\n'))
-			.catch(() => []);
+		for (const folder of workspaceFolders) {
+			// Read top-level .gitignore if it exists
+			const gitignore = await vscode.workspace.fs.readFile(vscode.Uri.joinPath(folder.uri, '.gitignore'))
+				.then(data => data.toString().split('\n').filter(Boolean))
+				.catch(() => []);
 
-		const files = await vscode.workspace.findFiles('**/*', gitignore.join(','));
-		const todos = [];
+			const excludePattern = gitignore.length ? `{${gitignore.join(',')}}` : undefined;
+			const files = await vscode.workspace.findFiles(
+				new vscode.RelativePattern(folder, '**/*'),
+				excludePattern
+			);
 
-		for (const file of files) {
-			const content = await vscode.workspace.fs.readFile(file);
-			const lines = content.toString().split('\n');
+			for (const file of files) {
+				const content = await vscode.workspace.fs.readFile(file);
+				const lines = content.toString().split('\n');
 
-			for (let i = 0; i < lines.length; i++) {
-				const match = lines[i].match(/TODO\(baseline\/([\w-]+)\)/);
-				if (match) {
-					const featureName = match[1];
-					todos.push({
-						featureName,
-						fileName: path.basename(file.fsPath),
-						uri: file.fsPath,
-						line: i + 1
-					});
+				for (let i = 0; i < lines.length; i++) {
+					const match = lines[i].match(/TODO\(baseline\/([\w-]+)\)/);
+					if (match) {
+						const featureName = match[1];
+						todos.push({
+							featureName,
+							fileName: path.basename(file.fsPath),
+							uri: file.fsPath,
+							line: i + 1
+						});
+					}
 				}
 			}
 		}
