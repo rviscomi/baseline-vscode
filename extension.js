@@ -335,28 +335,66 @@ class BaselineTodoPanel {
 				<title>Baseline TODOs Report</title>
 				<style>
 					body { font-family: var(--vscode-font-family); color: var(--vscode-foreground); background-color: var(--vscode-editor-background); margin: 0; padding: 1em; }
-					.todo-item { padding: 10px; border-bottom: 1px solid var(--vscode-editorWidget-border); cursor: pointer; }
-					.todo-item:hover { background-color: var(--vscode-list-hoverBackground); }
-					.feature-name { font-weight: bold; color: var(--vscode-textLink-foreground); }
-					.file-info { color: var(--vscode-descriptionForeground); font-size: 0.9em; }
+					.feature-name { cursor: pointer; font-weight: bold; color: var(--vscode-textLink-foreground); }
+					table { width: 100%; border-collapse: collapse; }
+					table th { padding: 10px; text-align: left; }
+					table td { padding: 10px; text-align: left; }
+					table th, table td { border: 1px solid var(--vscode-editorWidget-border); }
+					tbody tr:nth-child(even) { background-color: var(--vscode-tree-tableOddRowsBackground); }
+					tbody tr { border-top: 1px solid var(--vscode-editorWidget-border); }
 					.loading { text-align: center; padding: 20px; }
+					.center { text-align: center; }
 				</style>
 			</head>
 			<body>
 				<div id="loading" class="loading">Loading TODOs...</div>
-				<div id="todos"></div>
+				<table hidden>
+					<thead>
+						<tr>
+							<th rowspan="2">Feature</th>
+							<th rowspan="2">Path</th>
+							<th rowspan="2">Description</th>
+							<th colspan="7" class="center">Support</th>
+							<th rowspan="2">Baseline Status</th>
+						</tr>
+						<tr>
+							<th>Chrome</th>
+							<th>Chrome Android</th>
+							<th>Edge</th>
+							<th>Firefox</th>
+							<th>Firefox Android</th>
+							<th>Safari</th>
+							<th>Safari iOS</th>
+						</tr>
+					</thead>
+					<tbody id="todos"></tbody>
+				</table>
 				<script src="${scriptUri}"></script>
 			</body>
 			</html>`;
 	}
 
 	updateTodos(todos) {
-		const todosHtml = todos.map(todo => `
-			<div class="todo-item" data-uri="${todo.uri}" data-line="${todo.line}">
-				<div class="feature-name">${todo.featureName}</div>
-				<div class="file-info">${todo.fileName}:${todo.line}</div>
-			</div>`
-		).join('');
+		const todosHtml = todos.map(todo => {
+			const feature = webFeatures.features[todo.featureName];
+			return `
+			<tr>
+				<td>${sanitizeFeatureName(todo.featureName)}</td>
+				<td class="feature-name" data-uri="${todo.uri}" data-line="${todo.line}">${todo.fileName}:${todo.line}</td>
+				<td>${feature.description_html}</td>
+				<td class="center">${feature.status.support.chrome || '🅇'}</td>
+				<td class="center">${feature.status.support.chrome_android || '🅇'}</td>
+				<td class="center">${feature.status.support.edge || '🅇'}</td>
+				<td class="center">${feature.status.support.firefox || '🅇'}</td>
+				<td class="center">${feature.status.support.firefox_android || '🅇'}</td>
+				<td class="center">${feature.status.support.safari || '🅇'}</td>
+				<td class="center">${feature.status.support.safari_ios || '🅇'}</td>
+				<td>
+					<img src="https://web-platform-dx.github.io/web-features/assets/img/${getBaselineImg(feature.status)}" alt="Baseline icon" width="25" height="14" style="vertical-align: middle;" /> \
+					${feature.baselineStatus}
+				</td>
+			</tr>`;
+		}).join('');
 
 		this._panel.webview.postMessage({
 			type: 'updateTodos',

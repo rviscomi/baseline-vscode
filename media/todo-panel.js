@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const vscode = acquireVsCodeApi();
 
 	const loading = document.getElementById('loading');
+	const table = document.getElementsByTagName('table')[0];
 	const todosContainer = document.getElementById('todos');
 
 	// Listen for messages from the extension
@@ -9,7 +10,8 @@ document.addEventListener('DOMContentLoaded', () => {
 		const message = event.data;
 		
 		if (message.type === 'updateTodos') {
-			loading.style.display = 'none';
+			loading.hidden = true;
+			table.hidden = false;
 			if (message.content.trim() === '') {
 				todosContainer.innerHTML = '<div class="no-todos">No items found</div>';
 			} else {
