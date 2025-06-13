@@ -375,6 +375,9 @@ async function scanBaselineTodos(context) {
 			return;
 		}
 
+		// Single source of truth for allowed extensions
+		const ALLOWED_EXTENSIONS = ['html', 'pug', 'css', 'scss', 'js', 'jsx', 'ts', 'tsx'];
+
 		for (const folder of workspaceFolders) {
 			// Read top-level .gitignore if it exists
 			const gitignore = await vscode.workspace.fs.readFile(vscode.Uri.joinPath(folder.uri, '.gitignore'))
@@ -383,11 +386,18 @@ async function scanBaselineTodos(context) {
 
 			const excludePattern = gitignore.length ? `{${gitignore.join(',')}}` : undefined;
 			const files = await vscode.workspace.findFiles(
-				new vscode.RelativePattern(folder, '**/*'),
+				new vscode.RelativePattern(folder, `**/*.{${ALLOWED_EXTENSIONS.join(',')}}`),
 				excludePattern
 			);
 
 			for (const file of files) {
+				const fileExt = path.extname(file.fsPath).toLowerCase().substring(1);
+				
+				// Double-check the extension matches our allowed list
+				if (!ALLOWED_EXTENSIONS.includes(fileExt)) {
+					continue;
+				}
+
 				const content = await vscode.workspace.fs.readFile(file);
 				const lines = content.toString().split('\n');
 
