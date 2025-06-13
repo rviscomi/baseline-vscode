@@ -265,6 +265,7 @@ ${Object.keys(BROWSER_NAME).map((browser) => {
 `;
 }
 
+
 class BaselineTodoPanel {
 	constructor(context) {
 		this._panel = vscode.window.createWebviewPanel(
@@ -364,6 +365,7 @@ class BaselineTodoPanel {
 	}
 }
 
+
 async function scanBaselineTodos(context) {
 	const panel = new BaselineTodoPanel(context);
 	const todos = [];
@@ -438,6 +440,7 @@ async function scanBaselineTodos(context) {
 		vscode.window.showErrorMessage('Error scanning for TODOs: ' + error.message);
 	}
 }
+
 
 module.exports = {
 	activate,
