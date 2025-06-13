@@ -14,6 +14,19 @@
   ],
   "main": "./extension.js",
   "contributes": {
+    "configuration": {
+      "title": "Baseline",
+      "properties": {
+        "baseline.allowedFileExtensions": {
+          "type": "array",
+          "default": ["html", "pug", "css", "scss", "js", "jsx", "ts", "tsx"],
+          "description": "File extensions to include when scanning for Baseline TODOs (without leading .)",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "commands": [
       {
         "command": "baseline-vscode.baselineSearch",

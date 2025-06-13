@@ -375,8 +375,25 @@ async function scanBaselineTodos(context) {
 			return;
 		}
 
-		// Single source of truth for allowed extensions
-		const ALLOWED_EXTENSIONS = ['html', 'pug', 'css', 'scss', 'js', 'jsx', 'ts', 'tsx'];
+		// Get extensions from settings
+		const config = vscode.workspace.getConfiguration('baseline');
+		let allowedExtensions = config.get('allowedFileExtensions', []);
+
+		// Ensure we have a valid array of extensions
+		if (!Array.isArray(allowedExtensions) || allowedExtensions.length === 0) {
+			vscode.window.showErrorMessage('No file extensions configured for Baseline scan. Please set "baseline.allowedFileExtensions" in your settings.');
+			return;
+		}
+
+		// Clean up extensions (remove leading dots and filter out empty strings)
+		const cleanExtensions = allowedExtensions
+			.map(ext => ext.startsWith('.') ? ext.substring(1) : ext)
+			.filter(Boolean);
+
+		if (cleanExtensions.length === 0) {
+			vscode.window.showErrorMessage('No valid file extensions specified for scanning');
+			return;
+		}
 
 		for (const folder of workspaceFolders) {
 			// Read top-level .gitignore if it exists
@@ -386,7 +403,7 @@ async function scanBaselineTodos(context) {
 
 			const excludePattern = gitignore.length ? `{${gitignore.join(',')}}` : undefined;
 			const files = await vscode.workspace.findFiles(
-				new vscode.RelativePattern(folder, `**/*.{${ALLOWED_EXTENSIONS.join(',')}}`),
+				new vscode.RelativePattern(folder, `**/*.{${cleanExtensions.join(',')}}`),
 				excludePattern
 			);
 
@@ -394,7 +411,7 @@ async function scanBaselineTodos(context) {
 				const fileExt = path.extname(file.fsPath).toLowerCase().substring(1);
 				
 				// Double-check the extension matches our allowed list
-				if (!ALLOWED_EXTENSIONS.includes(fileExt)) {
+				if (!cleanExtensions.includes(fileExt)) {
 					continue;
 				}
 
