@@ -44,6 +44,10 @@ async function activate(context) {
 		vscode.languages.registerHoverProvider({ pattern: '**' }, new BaselineHoverProvider(context))
 	);
 
+	context.subscriptions.push(
+		vscode.commands.registerCommand('baseline-vscode.scanBaselineTodos', () => scanBaselineTodos(context))
+	);
+
 	vscode.workspace.textDocuments.forEach(document => {
 		validateBaselineFeatureIds(document);
 	});
@@ -54,8 +58,8 @@ async function activate(context) {
 	}, null, context.subscriptions);
 	
 	vscode.workspace.onDidOpenTextDocument(document => {
-    validateBaselineFeatureIds(document);
-  });
+		validateBaselineFeatureIds(document);
+	});
 	vscode.workspace.onDidSaveTextDocument(document => {
 		validateBaselineFeatureIds(document);
 	});
@@ -147,9 +151,9 @@ class BaselineHoverProvider {
 	}
 
 	provideHover(document, position, token) {
-    const lineText = document.lineAt(position.line).text.substr(0, 100);
+	const lineText = document.lineAt(position.line).text.substr(0, 100);
 		// TODO: handle multiple matches per line
-    const match = lineText.match(/(?:\bbaseline\/([a-z-]+)\b|<baseline-status[^>]*featureId=[\'"]?([a-z-]+)[\'"]?)/i);
+	const match = lineText.match(/(?:\bbaseline\/([a-z-]+)\b|<baseline-status[^>]*featureId=[\'"]?([a-z-]+)[\'"]?)/i);
 		if (!match) {
 			return;
 		}
@@ -259,6 +263,220 @@ ${Object.keys(BROWSER_NAME).map((browser) => {
 	return `${getBrowserName(browser)} ${version} | ${getReleaseDate(browser, version)}`;
 }).join('\n')}
 `;
+}
+
+
+class BaselineTodoPanel {
+	constructor(context) {
+		this._panel = vscode.window.createWebviewPanel(
+			'baselineTodos',
+			'Baseline TODOs Report',
+			vscode.ViewColumn.One,
+			{
+				enableScripts: true,
+				retainContextWhenHidden: true,
+				localResourceRoots: [vscode.Uri.joinPath(context.extensionUri, 'media')]
+			}
+		);
+
+		this._panel.onDidDispose(() => {
+			this.dispose();
+		});
+
+		// Set up message listener for the webview panel
+		this._panel.webview.onDidReceiveMessage(
+			message => {
+				if (message.type === 'todoClick') {
+					this._handleTodoClick(message);
+				}
+			},
+			null,
+			context.subscriptions
+		);
+
+		this._panel.webview.html = this._getHtmlForWebview(context);
+	}
+
+	_handleTodoClick(message) {
+		try {
+			const uri = vscode.Uri.file(message.uri);
+			
+			vscode.workspace.openTextDocument(uri).then(doc => {
+				vscode.window.showTextDocument(doc).then(editor => {
+					const position = new vscode.Position(message.line - 1, 0);
+					const range = new vscode.Range(position, position);
+					editor.selection = new vscode.Selection(position, position);
+					editor.revealRange(range, vscode.TextEditorRevealType.InCenter);
+				}, error => {
+					console.error('Error showing document:', error);
+				});
+			}, error => {
+				console.error('Error opening document:', error);
+			});
+		} catch (error) {
+			console.error('Error handling todo click:', error);
+		}
+	}
+
+	dispose() {
+		this._panel.dispose();
+	}
+
+	_getHtmlForWebview(context) {
+		const scriptPathOnDisk = vscode.Uri.joinPath(context.extensionUri, 'media', 'todo-panel.js');
+		const scriptUri = this._panel.webview.asWebviewUri(scriptPathOnDisk);
+
+		return `<!DOCTYPE html>
+			<html lang="en">
+			<head>
+				<meta charset="UTF-8">
+				<meta name="viewport" content="width=device-width, initial-scale=1.0">
+				<meta name="color-scheme" content="light dark">
+				<title>Baseline TODOs Report</title>
+				<style>
+					body { font-family: var(--vscode-font-family); color: var(--vscode-foreground); background-color: var(--vscode-editor-background); margin: 0; padding: 1em; }
+					.feature-name { cursor: pointer; font-weight: bold; color: var(--vscode-textLink-foreground); }
+					table { width: 100%; border-collapse: collapse; }
+					table th { padding: 10px; text-align: left; }
+					table td { padding: 10px; text-align: left; }
+					table th, table td { border: 1px solid var(--vscode-editorWidget-border); }
+					tbody tr:nth-child(even) { background-color: var(--vscode-tree-tableOddRowsBackground); }
+					tbody tr { border-top: 1px solid var(--vscode-editorWidget-border); }
+					.loading { text-align: center; padding: 20px; }
+					.center { text-align: center; }
+				</style>
+			</head>
+			<body>
+				<div id="loading" class="loading">Loading TODOs...</div>
+				<table hidden>
+					<thead>
+						<tr>
+							<th rowspan="2">Feature</th>
+							<th rowspan="2">Path</th>
+							<th rowspan="2">Description</th>
+							<th colspan="7" class="center">Support</th>
+							<th rowspan="2">Baseline Status</th>
+						</tr>
+						<tr>
+							<th>Chrome</th>
+							<th>Chrome Android</th>
+							<th>Edge</th>
+							<th>Firefox</th>
+							<th>Firefox Android</th>
+							<th>Safari</th>
+							<th>Safari iOS</th>
+						</tr>
+					</thead>
+					<tbody id="todos"></tbody>
+				</table>
+				<script src="${scriptUri}"></script>
+			</body>
+			</html>`;
+	}
+
+	updateTodos(todos) {
+		const todosHtml = todos.map(todo => {
+			const feature = webFeatures.features[todo.featureName];
+			return `
+			<tr>
+				<td>${sanitizeFeatureName(todo.featureName)}</td>
+				<td class="feature-name" data-uri="${todo.uri}" data-line="${todo.line}">${todo.fileName}:${todo.line}</td>
+				<td>${feature.description_html}</td>
+				<td class="center">${feature.status.support.chrome || '🅇'}</td>
+				<td class="center">${feature.status.support.chrome_android || '🅇'}</td>
+				<td class="center">${feature.status.support.edge || '🅇'}</td>
+				<td class="center">${feature.status.support.firefox || '🅇'}</td>
+				<td class="center">${feature.status.support.firefox_android || '🅇'}</td>
+				<td class="center">${feature.status.support.safari || '🅇'}</td>
+				<td class="center">${feature.status.support.safari_ios || '🅇'}</td>
+				<td>
+					<img src="https://web-platform-dx.github.io/web-features/assets/img/${getBaselineImg(feature.status)}" alt="Baseline icon" width="25" height="14" style="vertical-align: middle;" /> \
+					${feature.baselineStatus}
+				</td>
+			</tr>`;
+		}).join('');
+
+		this._panel.webview.postMessage({
+			type: 'updateTodos',
+			content: todosHtml
+		});
+	}
+}
+
+
+async function scanBaselineTodos(context) {
+	const panel = new BaselineTodoPanel(context);
+	const todos = [];
+
+	try {
+		const workspaceFolders = vscode.workspace.workspaceFolders;
+		if (!workspaceFolders || workspaceFolders.length === 0) {
+			vscode.window.showErrorMessage('No workspace folder found');
+			return;
+		}
+
+		// Get extensions from settings
+		const config = vscode.workspace.getConfiguration('baseline');
+		let allowedExtensions = config.get('allowedFileExtensions', []);
+
+		// Ensure we have a valid array of extensions
+		if (!Array.isArray(allowedExtensions) || allowedExtensions.length === 0) {
+			vscode.window.showErrorMessage('No file extensions configured for Baseline scan. Please set "baseline.allowedFileExtensions" in your settings.');
+			return;
+		}
+
+		// Clean up extensions (remove leading dots and filter out empty strings)
+		const cleanExtensions = allowedExtensions
+			.map(ext => ext.startsWith('.') ? ext.substring(1) : ext)
+			.filter(Boolean);
+
+		if (cleanExtensions.length === 0) {
+			vscode.window.showErrorMessage('No valid file extensions specified for scanning');
+			return;
+		}
+
+		for (const folder of workspaceFolders) {
+			// Read top-level .gitignore if it exists
+			const gitignore = await vscode.workspace.fs.readFile(vscode.Uri.joinPath(folder.uri, '.gitignore'))
+				.then(data => data.toString().split('\n').filter(Boolean))
+				.catch(() => []);
+
+			const excludePattern = gitignore.length ? `{${gitignore.join(',')}}` : undefined;
+			const files = await vscode.workspace.findFiles(
+				new vscode.RelativePattern(folder, `**/*.{${cleanExtensions.join(',')}}`),
+				excludePattern
+			);
+
+			for (const file of files) {
+				const fileExt = path.extname(file.fsPath).toLowerCase().substring(1);
+				
+				// Double-check the extension matches our allowed list
+				if (!cleanExtensions.includes(fileExt)) {
+					continue;
+				}
+
+				const content = await vscode.workspace.fs.readFile(file);
+				const lines = content.toString().split('\n');
+
+				for (let i = 0; i < lines.length; i++) {
+					const match = lines[i].match(/TODO\(baseline\/([\w-]+)\)/);
+					if (match) {
+						const featureName = match[1];
+						todos.push({
+							featureName,
+							fileName: path.basename(file.fsPath),
+							uri: file.fsPath,
+							line: i + 1
+						});
+					}
+				}
+			}
+		}
+
+		panel.updateTodos(todos);
+	} catch (error) {
+		vscode.window.showErrorMessage('Error scanning for TODOs: ' + error.message);
+	}
 }
 
 
