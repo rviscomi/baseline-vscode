@@ -1,12 +1,17 @@
 import globals from "globals";
 
-export default [{
+export default [
+    {
+        ignores: [".vscode-test/**", "node_modules/**"]
+    },
+    {
     files: ["**/*.js"],
     languageOptions: {
         globals: {
             ...globals.commonjs,
             ...globals.node,
             ...globals.mocha,
+            ...globals.browser,
         },
 
         ecmaVersion: 2022,
