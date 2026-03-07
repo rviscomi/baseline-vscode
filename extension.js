@@ -14,6 +14,12 @@ const BROWSER_NAME = {
 	'firefox_android': 'Firefox for Android'
 };
 
+const BaselineImages = {
+	BASELINE_LIMITED: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTAiIHZpZXdCb3g9IjAgMCA1NDAgMzAwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgogIDxzdHlsZT4KICAgIC5ncmF5LXNoYXBlIHsKICAgICAgZmlsbDogI0M2QzZDNjsgLyogTGlnaHQgbW9kZSAqLwogICAgfQoKICAgIEBtZWRpYSAocHJlZmVycy1jb2xvci1zY2hlbWU6IGRhcmspIHsKICAgICAgLmdyYXktc2hhcGUgewogICAgICAgIGZpbGw6ICM1NjU2NTY7IC8qIERhcmsgbW9kZSAqLwogICAgICB9CiAgICB9CiAgPC9zdHlsZT4KICA8cGF0aCBkPSJNMTUwIDBMMjQwIDkwTDIxMCAxMjBMMTIwIDMwTDE1MCAwWiIgZmlsbD0iI0YwOTQwOSIvPgogIDxwYXRoIGQ9Ik00MjAgMzBMNTQwIDE1MEw0MjAgMjcwTDM5MCAyNDBMNDgwIDE1MEwzOTAgNjBMNDIwIDMwWiIgY2xhc3M9ImdyYXktc2hhcGUiLz4KICA8cGF0aCBkPSJNMzMwIDE4MEwzMDAgMjEwTDM5MCAzMDBMNDIwIDI3MEwzMzAgMTgwWiIgZmlsbD0iI0YwOTQwOSIvPgogIDxwYXRoIGQ9Ik0xMjAgMzBMMTUwIDYwTDYwIDE1MEwxNTAgMjQwTDEyMCAyNzBMMCAxNTBMMTIwIDMwWiIgY2xhc3M9ImdyYXktc2hhcGUiLz4KICA8cGF0aCBkPSJNMzkwIDBMNDIwIDMwTDE1MCAzMDBMMTIwIDI3MEwzOTAgMFoiIGZpbGw9IiNGMDk0MDkiLz4KPC9zdmc+',
+	BASELINE_LOW: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTAiIHZpZXdCb3g9IjAgMCA1NDAgMzAwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgogIDxzdHlsZT4KICAgIC5ibHVlLXNoYXBlIHsKICAgICAgZmlsbDogI0E4QzdGQTsgLyogTGlnaHQgbW9kZSAqLwogICAgfQoKICAgIEBtZWRpYSAocHJlZmVycy1jb2xvci1zY2hlbWU6IGRhcmspIHsKICAgICAgLmJsdWUtc2hhcGUgewogICAgICAgIGZpbGw6ICMyRDUwOUU7IC8qIERhcmsgbW9kZSAqLwogICAgICB9CiAgICB9CgogICAgLmRhcmtlci1ibHVlLXNoYXBlIHsKICAgICAgICBmaWxsOiAjMUI2RUYzOwogICAgfQoKICAgIEBtZWRpYSAocHJlZmVycy1jb2xvci1zY2hlbWU6IGRhcmspIHsKICAgICAgICAuZGFya2VyLWJsdWUtc2hhcGUgewogICAgICAgICAgICBmaWxsOiAjNDE4NUZGOwogICAgICAgIH0KICAgIH0KCiAgPC9zdHlsZT4KICA8cGF0aCBkPSJNMTUwIDBMMTgwIDMwTDE1MCA2MEwxMjAgMzBMMTUwIDBaIiBjbGFzcz0iYmx1ZS1zaGFwZSIvPgogIDxwYXRoIGQ9Ik0yMTAgNjBMMjQwIDkwTDIxMCAxMjBMMTgwIDkwTDIxMCA2MFoiIGNsYXNzPSJibHVlLXNoYXBlIi8+CiAgPHBhdGggZD0iTTQ1MCA2MEw0ODAgOTBMNDUwIDEyMEw0MjAgOTBMNDUwIDYwWiIgY2xhc3M9ImJsdWUtc2hhcGUiLz4KICA8cGF0aCBkPSJNNTEwIDEyMEw1NDAgMTUwTDUxMCAxODBMNDgwIDE1MEw1MTAgMTIwWiIgY2xhc3M9ImJsdWUtc2hhcGUiLz4KICA8cGF0aCBkPSJNNDUwIDE4MEw0ODAgMjEwTDQ1MCAyNDBMNDIwIDIxMEw0NTAgMTgwWiIgY2xhc3M9ImJsdWUtc2hhcGUiLz4KICA8cGF0aCBkPSJNMzkwIDI0MEw0MjAgMjcwTDM5MCAzMDBMMzYwIDI3MEwzOTAgMjQwWiIgY2xhc3M9ImJsdWUtc2hhcGUiLz4KICA8cGF0aCBkPSJNMzMwIDE4MEwzNjAgMjEwTDMzMCAyNDBMMzAwIDIxMEwzMzAgMTgwWiIgY2xhc3M9ImJsdWUtc2hhcGUiLz4KICA8cGF0aCBkPSJNOTAgNjBMMTIwIDkwTDkwIDEyMEw2MCA5MEw5MCA2MFoiIGNsYXNzPSJibHVlLXNoYXBlIi8+CiAgPHBhdGggZD0iTTM5MCAwTDQyMCAzMEwxNTAgMzAwTDAgMTUwTDMwIDEyMEwxNTAgMjQwTDM5MCAwWiIgY2xhc3M9ImRhcmtlci1ibHVlLXNoYXBlIi8+Cjwvc3ZnPg==',
+	BASELINE_HIGH: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTAiIHZpZXdCb3g9IjAgMCA1NDAgMzAwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgogIDxzdHlsZT4KICAgIC5ncmVlbi1zaGFwZSB7CiAgICAgIGZpbGw6ICNDNEVFRDA7IC8qIExpZ2h0IG1vZGUgKi8KICAgIH0KCiAgICBAbWVkaWEgKHByZWZlcnMtY29sb3Itc2NoZW1lOiBkYXJrKSB7CiAgICAgIC5ncmVlbi1zaGFwZSB7CiAgICAgICAgZmlsbDogIzEyNTIyNTsgLyogRGFyayBtb2RlICovCiAgICAgIH0KICAgIH0KICA8L3N0eWxlPgogIDxwYXRoIGQ9Ik00MjAgMzBMMzkwIDYwTDQ4MCAxNTBMMzkwIDI0MEwzMzAgMTgwTDMwMCAyMTBMMzkwIDMwMEw1NDAgMTUwTDQyMCAzMFoiIGNsYXNzPSJncmVlbi1zaGFwZSIvPgogIDxwYXRoIGQ9Ik0xNTAgMEwzMCAxMjBMNjAgMTUwTDE1MCA2MEwyMTAgMTIwTDI0MCA5MEwxNTAgMFoiIGNsYXNzPSJncmVlbi1zaGFwZSIvPgogIDxwYXRoIGQ9Ik0zOTAgMEw0MjAgMzBMMzkwIDYwTDMwIDMwMEwwIDI3MEwzOTAgMFoiIGZpbGw9IiMxRUE0NDYiLz4KPC9zdmc+'
+};
+
 const PATTERNS = {
 	PREFIX: {
 		full: /baseline\/([a-z-]+)\b/i,
@@ -52,7 +58,9 @@ async function loadWebFeatures() {
 
 async function activate(context) {
 	webFeatures = await loadWebFeatures();
-	featureOptions = Object.entries(webFeatures.features).map(([featureId, feature]) => {
+	featureOptions = Object.entries(webFeatures.features)
+		.filter(([, feature]) => feature.kind === 'feature')
+		.map(([featureId, feature]) => {
 		return Object.assign(feature, {
 			featureId,
 			label: feature.name,
@@ -69,7 +77,12 @@ async function activate(context) {
 		vscode.commands.registerCommand('baseline-vscode.baselineSearch', runBaselineSearch)
 	);
 	context.subscriptions.push(
-		vscode.languages.registerHoverProvider({ pattern: '**' }, new BaselineHoverProvider(context))
+		vscode.languages.registerHoverProvider(['javascript', 'markdown', 'html'], new BaselineHoverProvider(context))
+	);
+	context.subscriptions.push(
+		vscode.languages.registerCodeActionsProvider(['javascript', 'markdown', 'html'], new BaselineCodeActionProvider(), {
+			providedCodeActionKinds: [vscode.CodeActionKind.QuickFix]
+		})
 	);
 
 	vscode.workspace.textDocuments.forEach(document => {
@@ -104,11 +117,14 @@ async function runBaselineSearch() {
 		return;
 	}
 
-	console.log(feature);
-	const selection = await vscode.window.showInformationMessage(
-		`${feature.featureId} is ${feature.baselineStatus}`,
-		'Explore'
-	);
+	const { name: featureName, status } = feature;
+	const { baseline, baseline_low_date } = status || {};
+
+	const message = (baseline === 'low' || baseline === 'high') && baseline_low_date
+		? `${featureName} is ${baseline === 'high' ? 'Widely available' : 'Newly available'}. It's been Baseline since ${baseline_low_date}.`
+		: `${featureName} is not supported across all major browsers.`;
+
+	const selection = await vscode.window.showInformationMessage(message, 'Explore');
 	if (!selection) {
 		return;
 	}
@@ -120,7 +136,7 @@ async function runBaselineSearch() {
 
 async function handleBaselineHotPhrase(event) {
 	const editor = vscode.window.activeTextEditor;
-	if (!editor || event.document !== editor.document || editor.document.lineCount === 0) {
+	if (!editor || event.document !== editor.document || editor.document.lineCount === 0 || !['javascript', 'markdown', 'html'].includes(event.document.languageId)) {
 		return;
 	}
 
@@ -146,24 +162,36 @@ async function handleBaselineHotPhrase(event) {
 
 
 function validateBaselineFeatureIds(document) {
+	if (!['javascript', 'markdown', 'html'].includes(document.languageId)) {
+		return;
+	}
 	const issues = [];
 	for (let i = 0; i < document.lineCount; i++) {
 		const line = document.lineAt(i).text;
-		// TODO: handle multiple matches per line
-		const match = line.match(BASELINE_ID_REGEX);
-		if (!match) {
-			continue;
-		}
+		const matches = line.matchAll(new RegExp(BASELINE_ID_REGEX, 'gi'));
 
-		const featureId = extractFeatureId(match);
-		if (isValidFeatureId(featureId)) {
-			continue;
-		}
+		for (const match of matches) {
+			const featureId = extractFeatureId(match);
+			if (isValidFeatureId(featureId)) {
+				continue;
+			}
 
-		const startingIndex = match.index + match[0].indexOf(featureId);
-		const range = new vscode.Range(i, startingIndex, i, startingIndex + featureId.length);
-		const diagnostic = new vscode.Diagnostic(range, `Unrecognized Baseline feature ID: ${featureId}\n\nTry using the "Baseline search" command to find the feature you're looking for.`, vscode.DiagnosticSeverity.Error);
-		issues.push(diagnostic);
+			const startingIndex = match.index + match[0].indexOf(featureId);
+			const range = new vscode.Range(i, startingIndex, i, startingIndex + featureId.length);
+			
+			let errorMessage = `Unrecognized Baseline feature ID: ${featureId}\n\nTry using the "Baseline search" command to find the feature you're looking for.`;
+			const feature = webFeatures.features[featureId];
+			if (feature) {
+				if (feature.kind === 'moved') {
+					errorMessage = `Baseline feature ID '${featureId}' has been replaced by '${feature.redirect_target}'.`;
+				} else if (feature.kind === 'split') {
+					errorMessage = `Baseline feature ID '${featureId}' has been split into: ${feature.redirect_targets.join(', ')}.`;
+				}
+			}
+
+			const diagnostic = new vscode.Diagnostic(range, errorMessage, vscode.DiagnosticSeverity.Error);
+			issues.push(diagnostic);
+		}
 	}
 
 	diagnosticCollection.set(document.uri, issues);
@@ -175,41 +203,62 @@ class BaselineHoverProvider {
 		this.context = context;
 	}
 
-	provideHover(document, position, token) {
+	provideHover(document, position) {
 		const lineText = document.lineAt(position.line).text.substr(0, 100);
-		// TODO: handle multiple matches per line
-		const match = lineText.match(BASELINE_ID_REGEX);
-		if (!match) {
-			return;
+		const matches = lineText.matchAll(new RegExp(BASELINE_ID_REGEX, 'gi'));
+
+		for (const match of matches) {
+			const featureId = extractFeatureId(match);
+			const startingIndex = match.index;
+			const endingIndex = match.index + match[0].length;
+
+			if (position.character < startingIndex || position.character >= endingIndex) {
+				continue;
+			}
+
+			const featureInfo = featureOptions.find(feature => feature.featureId == featureId);
+			if (!featureInfo) {
+				continue;
+			}
+
+			const markdownString = new vscode.MarkdownString();
+			markdownString.supportHtml = true;
+			markdownString.baseUri = vscode.Uri.file(path.join(this.context.extensionPath, 'img', path.sep));
+			markdownString.appendMarkdown(getFeatureMarkdown(featureInfo));
+
+			const range = new vscode.Range(
+				position.line, startingIndex, position.line, endingIndex
+			);
+			return new vscode.Hover(markdownString, range);
 		}
+	}
+}
 
-		const featureId = extractFeatureId(match);
-		const featureInfo = featureOptions.find(feature => feature.featureId == featureId);
-		if (!featureInfo) {
-			// The feature ID is invalid and will be flagged by the diagnostic provider.
-			return;
+
+class BaselineCodeActionProvider {
+	provideCodeActions(document, range, context) {
+		const actions = [];
+		for (const diagnostic of context.diagnostics) {
+			const featureId = document.getText(diagnostic.range);
+			const feature = webFeatures.features[featureId];
+			if (feature && feature.kind === 'moved') {
+				const fix = new vscode.CodeAction(`Replace with '${feature.redirect_target}'`, vscode.CodeActionKind.QuickFix);
+				fix.edit = new vscode.WorkspaceEdit();
+				fix.edit.replace(document.uri, diagnostic.range, feature.redirect_target);
+				fix.diagnostics = [diagnostic];
+				fix.isPreferred = true;
+				actions.push(fix);
+			}
 		}
-
-		const startingIndex = match.index + match[0].indexOf(featureId);
-		if (position.character < startingIndex || position.character > startingIndex + featureId.length) {
-			// The cursor is not positioned on the feature ID.
-			return;
-		}
-
-		const markdownString = new vscode.MarkdownString();
-		markdownString.supportHtml = true;
-		markdownString.baseUri = vscode.Uri.file(path.join(this.context.extensionPath, 'img', path.sep));
-		markdownString.appendMarkdown(getFeatureMarkdown(featureInfo));
-
-		const range = new vscode.Range(
-			position.line, startingIndex, position.line, startingIndex + featureId.length
-		);
-		return new vscode.Hover(markdownString, range);
+		return actions;
 	}
 }
 
 
 function getBaselineStatus(status) {
+	if (!status) {
+		return 'Status unavailable';
+	}
 	if (status.baseline == 'low') {
 		return `Baseline Newly available since ${status.baseline_low_date}`;
 	}
@@ -230,13 +279,16 @@ function getBrowserName(browserId) {
 
 
 function getBaselineImg(status) {
+	if (!status) {
+		return BaselineImages.BASELINE_LIMITED;
+	}
 	if (status.baseline == 'low') {
-		return 'baseline-newly-icon.png';
+		return BaselineImages.BASELINE_LOW;
 	}
 	if (status.baseline == 'high') {
-		return 'baseline-widely-icon.png';
+		return BaselineImages.BASELINE_HIGH;
 	}
-	return 'baseline-limited-icon.png';
+	return BaselineImages.BASELINE_LIMITED;
 }
 
 
@@ -258,7 +310,8 @@ function getReleaseDate(browserId, version) {
 
 
 function isValidFeatureId(featureId) {
-	return featureId in webFeatures.features;
+	const feature = webFeatures.features[featureId];
+	return feature && feature.kind === 'feature';
 }
 
 
@@ -271,17 +324,16 @@ function sanitizeFeatureName(featureName) {
 
 
 function getFeatureMarkdown(feature) {
-	return `### ${sanitizeFeatureName(feature.name)}
+	return `### <img src="${getBaselineImg(feature.status)}" alt="Baseline icon" height="14" style="aspect-ratio: 25 / 14;" /> ${sanitizeFeatureName(feature.name)}
 
 ${feature.description_html}
 
-<img src="https://web-platform-dx.github.io/web-features/assets/img/${getBaselineImg(feature.status)}" alt="Baseline icon" width="25" height="14" style="vertical-align: middle;" /> \
 ${feature.baselineStatus}
 
 Browser version | Relase date
 --- | ---
 ${Object.keys(BROWSER_NAME).map((browser) => {
-		const version = feature.status.support[browser];
+	const version = feature.status?.support?.[browser];
 		if (!version) {
 			return `${getBrowserName(browser)} | 🅇`;
 		}
