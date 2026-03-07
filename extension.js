@@ -14,6 +14,34 @@ const BROWSER_NAME = {
 	'firefox_android': 'Firefox for Android'
 };
 
+const PATTERNS = {
+	PREFIX: {
+		full: /baseline\/([a-z-]+)\b/i,
+		trigger: /baseline\/$/
+	},
+	TAG: {
+		full: /<baseline-status[^>]*featureId=['"]?([a-z-]+)['"]?/i,
+		trigger: /<baseline-status[^>]*featureId=['"]?$/
+	},
+	MACRO: {
+		full: /{{\s*BASELINE_STATUS\(['"]?([a-z-]+)['"]?\)\s*}}/i,
+		trigger: /{{\s*BASELINE_STATUS\(['"]?$/
+	},
+	TODO: {
+		full: /TODO\(baseline\/([a-z-]+)\)/i,
+		trigger: /TODO\(baseline\/$/
+	}
+};
+
+const BASELINE_ID_REGEX = new RegExp(
+	Object.values(PATTERNS).map(p => p.full.source).join('|'),
+	'i'
+);
+
+function extractFeatureId(match) {
+	return match?.slice(1).find(group => group !== undefined)?.toLowerCase();
+}
+
 async function loadWebFeatures() {
 	try {
 		return await import('web-features');
@@ -52,10 +80,10 @@ async function activate(context) {
 		handleBaselineHotPhrase(event);
 		validateBaselineFeatureIds(event.document);
 	}, null, context.subscriptions);
-	
+
 	vscode.workspace.onDidOpenTextDocument(document => {
-    validateBaselineFeatureIds(document);
-  });
+		validateBaselineFeatureIds(document);
+	});
 	vscode.workspace.onDidSaveTextDocument(document => {
 		validateBaselineFeatureIds(document);
 	});
@@ -96,10 +124,11 @@ async function handleBaselineHotPhrase(event) {
 		return;
 	}
 
-	// Check if the line contains either hot phrase.
+	// Check if the line matches any trigger pattern.
 	const position = editor.selection.active;
 	const linePrefix = editor.document.lineAt(position).text.substr(0, position.character + 1);
-	if (!linePrefix.endsWith('baseline/') && !linePrefix.match(/<baseline-status[^>]*featureId=[\'"]?$/)) {
+	const hasTriggerMatch = Object.values(PATTERNS).some(p => linePrefix.match(p.trigger));
+	if (!hasTriggerMatch) {
 		return;
 	}
 
@@ -121,18 +150,18 @@ function validateBaselineFeatureIds(document) {
 	for (let i = 0; i < document.lineCount; i++) {
 		const line = document.lineAt(i).text;
 		// TODO: handle multiple matches per line
-		const match = line.match(/(?:\bbaseline\/([a-z-]+)\b|<baseline-status[^>]*featureId=[\'"]?([a-z-]+)[\'"]?)/i);
+		const match = line.match(BASELINE_ID_REGEX);
 		if (!match) {
 			continue;
 		}
 
-		const featureId = (match[1] ?? match[2]).toLowerCase();
+		const featureId = extractFeatureId(match);
 		if (isValidFeatureId(featureId)) {
 			continue;
 		}
 
 		const startingIndex = match.index + match[0].indexOf(featureId);
-		const range = new vscode.Range(i, startingIndex, i, startingIndex +featureId.length);
+		const range = new vscode.Range(i, startingIndex, i, startingIndex + featureId.length);
 		const diagnostic = new vscode.Diagnostic(range, `Unrecognized Baseline feature ID: ${featureId}\n\nTry using the "Baseline search" command to find the feature you're looking for.`, vscode.DiagnosticSeverity.Error);
 		issues.push(diagnostic);
 	}
@@ -147,14 +176,14 @@ class BaselineHoverProvider {
 	}
 
 	provideHover(document, position, token) {
-    const lineText = document.lineAt(position.line).text.substr(0, 100);
+		const lineText = document.lineAt(position.line).text.substr(0, 100);
 		// TODO: handle multiple matches per line
-    const match = lineText.match(/(?:\bbaseline\/([a-z-]+)\b|<baseline-status[^>]*featureId=[\'"]?([a-z-]+)[\'"]?)/i);
+		const match = lineText.match(BASELINE_ID_REGEX);
 		if (!match) {
 			return;
 		}
 
-		const featureId = (match[1] ?? match[2]).toLowerCase();
+		const featureId = extractFeatureId(match);
 		const featureInfo = featureOptions.find(feature => feature.featureId == featureId);
 		if (!featureInfo) {
 			// The feature ID is invalid and will be flagged by the diagnostic provider.
@@ -252,17 +281,19 @@ ${feature.baselineStatus}
 Browser version | Relase date
 --- | ---
 ${Object.keys(BROWSER_NAME).map((browser) => {
-	const version = feature.status.support[browser];
-	if (!version) {
-		return `${getBrowserName(browser)} | 🅇`;
-	}
-	return `${getBrowserName(browser)} ${version} | ${getReleaseDate(browser, version)}`;
-}).join('\n')}
+		const version = feature.status.support[browser];
+		if (!version) {
+			return `${getBrowserName(browser)} | 🅇`;
+		}
+		return `${getBrowserName(browser)} ${version} | ${getReleaseDate(browser, version)}`;
+	}).join('\n')}
 `;
 }
 
 
 module.exports = {
 	activate,
-	deactivate
+	deactivate,
+	PATTERNS,
+	extractFeatureId
 }
