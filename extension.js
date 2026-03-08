@@ -4,6 +4,10 @@ const path = require('path');
 let diagnosticCollection;
 let featureOptions = [];
 let webFeatures = {};
+
+let DECORATION_LIMITED;
+let DECORATION_LOW;
+let DECORATION_HIGH;
 const BROWSER_NAME = {
 	'chrome': 'Chrome',
 	'chrome_android': 'Chrome Android',
@@ -14,10 +18,12 @@ const BROWSER_NAME = {
 	'firefox_android': 'Firefox for Android'
 };
 
+const SUPPORTED_LANGUAGES = ['javascript', 'markdown', 'html', 'css', 'yaml'];
+
 const BaselineImages = {
-	BASELINE_LIMITED: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTAiIHZpZXdCb3g9IjAgMCA1NDAgMzAwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgogIDxzdHlsZT4KICAgIC5ncmF5LXNoYXBlIHsKICAgICAgZmlsbDogI0M2QzZDNjsgLyogTGlnaHQgbW9kZSAqLwogICAgfQoKICAgIEBtZWRpYSAocHJlZmVycy1jb2xvci1zY2hlbWU6IGRhcmspIHsKICAgICAgLmdyYXktc2hhcGUgewogICAgICAgIGZpbGw6ICM1NjU2NTY7IC8qIERhcmsgbW9kZSAqLwogICAgICB9CiAgICB9CiAgPC9zdHlsZT4KICA8cGF0aCBkPSJNMTUwIDBMMjQwIDkwTDIxMCAxMjBMMTIwIDMwTDE1MCAwWiIgZmlsbD0iI0YwOTQwOSIvPgogIDxwYXRoIGQ9Ik00MjAgMzBMNTQwIDE1MEw0MjAgMjcwTDM5MCAyNDBMNDgwIDE1MEwzOTAgNjBMNDIwIDMwWiIgY2xhc3M9ImdyYXktc2hhcGUiLz4KICA8cGF0aCBkPSJNMzMwIDE4MEwzMDAgMjEwTDM5MCAzMDBMNDIwIDI3MEwzMzAgMTgwWiIgZmlsbD0iI0YwOTQwOSIvPgogIDxwYXRoIGQ9Ik0xMjAgMzBMMTUwIDYwTDYwIDE1MEwxNTAgMjQwTDEyMCAyNzBMMCAxNTBMMTIwIDMwWiIgY2xhc3M9ImdyYXktc2hhcGUiLz4KICA8cGF0aCBkPSJNMzkwIDBMNDIwIDMwTDE1MCAzMDBMMTIwIDI3MEwzOTAgMFoiIGZpbGw9IiNGMDk0MDkiLz4KPC9zdmc+',
-	BASELINE_LOW: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTAiIHZpZXdCb3g9IjAgMCA1NDAgMzAwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgogIDxzdHlsZT4KICAgIC5ibHVlLXNoYXBlIHsKICAgICAgZmlsbDogI0E4QzdGQTsgLyogTGlnaHQgbW9kZSAqLwogICAgfQoKICAgIEBtZWRpYSAocHJlZmVycy1jb2xvci1zY2hlbWU6IGRhcmspIHsKICAgICAgLmJsdWUtc2hhcGUgewogICAgICAgIGZpbGw6ICMyRDUwOUU7IC8qIERhcmsgbW9kZSAqLwogICAgICB9CiAgICB9CgogICAgLmRhcmtlci1ibHVlLXNoYXBlIHsKICAgICAgICBmaWxsOiAjMUI2RUYzOwogICAgfQoKICAgIEBtZWRpYSAocHJlZmVycy1jb2xvci1zY2hlbWU6IGRhcmspIHsKICAgICAgICAuZGFya2VyLWJsdWUtc2hhcGUgewogICAgICAgICAgICBmaWxsOiAjNDE4NUZGOwogICAgICAgIH0KICAgIH0KCiAgPC9zdHlsZT4KICA8cGF0aCBkPSJNMTUwIDBMMTgwIDMwTDE1MCA2MEwxMjAgMzBMMTUwIDBaIiBjbGFzcz0iYmx1ZS1zaGFwZSIvPgogIDxwYXRoIGQ9Ik0yMTAgNjBMMjQwIDkwTDIxMCAxMjBMMTgwIDkwTDIxMCA2MFoiIGNsYXNzPSJibHVlLXNoYXBlIi8+CiAgPHBhdGggZD0iTTQ1MCA2MEw0ODAgOTBMNDUwIDEyMEw0MjAgOTBMNDUwIDYwWiIgY2xhc3M9ImJsdWUtc2hhcGUiLz4KICA8cGF0aCBkPSJNNTEwIDEyMEw1NDAgMTUwTDUxMCAxODBMNDgwIDE1MEw1MTAgMTIwWiIgY2xhc3M9ImJsdWUtc2hhcGUiLz4KICA8cGF0aCBkPSJNNDUwIDE4MEw0ODAgMjEwTDQ1MCAyNDBMNDIwIDIxMEw0NTAgMTgwWiIgY2xhc3M9ImJsdWUtc2hhcGUiLz4KICA8cGF0aCBkPSJNMzkwIDI0MEw0MjAgMjcwTDM5MCAzMDBMMzYwIDI3MEwzOTAgMjQwWiIgY2xhc3M9ImJsdWUtc2hhcGUiLz4KICA8cGF0aCBkPSJNMzMwIDE4MEwzNjAgMjEwTDMzMCAyNDBMMzAwIDIxMEwzMzAgMTgwWiIgY2xhc3M9ImJsdWUtc2hhcGUiLz4KICA8cGF0aCBkPSJNOTAgNjBMMTIwIDkwTDkwIDEyMEw2MCA5MEw5MCA2MFoiIGNsYXNzPSJibHVlLXNoYXBlIi8+CiAgPHBhdGggZD0iTTM5MCAwTDQyMCAzMEwxNTAgMzAwTDAgMTUwTDMwIDEyMEwxNTAgMjQwTDM5MCAwWiIgY2xhc3M9ImRhcmtlci1ibHVlLXNoYXBlIi8+Cjwvc3ZnPg==',
-	BASELINE_HIGH: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTAiIHZpZXdCb3g9IjAgMCA1NDAgMzAwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgogIDxzdHlsZT4KICAgIC5ncmVlbi1zaGFwZSB7CiAgICAgIGZpbGw6ICNDNEVFRDA7IC8qIExpZ2h0IG1vZGUgKi8KICAgIH0KCiAgICBAbWVkaWEgKHByZWZlcnMtY29sb3Itc2NoZW1lOiBkYXJrKSB7CiAgICAgIC5ncmVlbi1zaGFwZSB7CiAgICAgICAgZmlsbDogIzEyNTIyNTsgLyogRGFyayBtb2RlICovCiAgICAgIH0KICAgIH0KICA8L3N0eWxlPgogIDxwYXRoIGQ9Ik00MjAgMzBMMzkwIDYwTDQ4MCAxNTBMMzkwIDI0MEwzMzAgMTgwTDMwMCAyMTBMMzkwIDMwMEw1NDAgMTUwTDQyMCAzMFoiIGNsYXNzPSJncmVlbi1zaGFwZSIvPgogIDxwYXRoIGQ9Ik0xNTAgMEwzMCAxMjBMNjAgMTUwTDE1MCA2MEwyMTAgMTIwTDI0MCA5MEwxNTAgMFoiIGNsYXNzPSJncmVlbi1zaGFwZSIvPgogIDxwYXRoIGQ9Ik0zOTAgMEw0MjAgMzBMMzkwIDYwTDMwIDMwMEwwIDI3MEwzOTAgMFoiIGZpbGw9IiMxRUE0NDYiLz4KPC9zdmc+'
+	BASELINE_LIMITED: 'data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9IjEwMCUiIHdpZHRoPSIxMDAlIiB2aWV3Qm94PSIwIDAgNTQwIDMwMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8c3R5bGU+CiAgICAuZ3JheS1zaGFwZSB7CiAgICAgIGZpbGw6ICNDNkM2QzY7IC8qIExpZ2h0IG1vZGUgKi8KICAgIH0KCiAgICBAbWVkaWEgKHByZWZlcnMtY29sb3Itc2NoZW1lOiBkYXJrKSB7CiAgICAgIC5ncmF5LXNoYXBlIHsKICAgICAgICBmaWxsOiAjNTY1NjU2OyAvKiBEYXJrIG1vZGUgKi8KICAgICAgfQogICAgfQogIDwvc3R5bGU+CiAgPHBhdGggZD0iTTE1MCAwTDI0MCA5MEwyMTAgMTIwTDEyMCAzMEwxNTAgMFoiIGZpbGw9IiNGMDk0MDkiLz4KICA8cGF0aCBkPSJNNDIwIDMwTDU0MCAxNTBMNDIwIDI3MEwzOTAgMjQwTDQ4MCAxNTBMMzkwIDYwTDQyMCAzMFoiIGNsYXNzPSJncmF5LXNoYXBlIi8+CiAgPHBhdGggZD0iTTMzMCAxODBMMzAwIDIxMEwzOTAgMzAwTDQyMCAyNzBMMzMwIDE4MFoiIGZpbGw9IiNGMDk0MDkiLz4KICA8cGF0aCBkPSJNMTIwIDMwTDE1MCA2MEw2MCAxNTBMMTUwIDI0MEwxMjAgMjcwTDAgMTUwTDEyMCAzMFoiIGNsYXNzPSJncmF5LXNoYXBlIi8+CiAgPHBhdGggZD0iTTM5MCAwTDQyMCAzMEwxNTAgMzAwTDEyMCAyNzBMMzkwIDBaIiBmaWxsPSIjRjA5NDA5Ii8+Cjwvc3ZnPg==',
+	BASELINE_LOW: 'data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9IjEwMCUiIHdpZHRoPSIxMDAlIiB2aWV3Qm94PSIwIDAgNTQwIDMwMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8c3R5bGU+CiAgICAuYmx1ZS1zaGFwZSB7CiAgICAgIGZpbGw6ICNBOEM3RkE7IC8qIExpZ2h0IG1vZGUgKi8KICAgIH0KCiAgICBAbWVkaWEgKHByZWZlcnMtY29sb3Itc2NoZW1lOiBkYXJrKSB7CiAgICAgIC5ibHVlLXNoYXBlIHsKICAgICAgICBmaWxsOiAjMkQ1MDlFOyAvKiBEYXJrIG1vZGUgKi8KICAgICAgfQogICAgfQoKICAgIC5kYXJrZXItYmx1ZS1zaGFwZSB7CiAgICAgICAgZmlsbDogIzFCNkVGMzsKICAgIH0KCiAgICBAbWVkaWEgKHByZWZlcnMtY29sb3Itc2NoZW1lOiBkYXJrKSB7CiAgICAgICAgLmRhcmtlci1ibHVlLXNoYXBlIHsKICAgICAgICAgICAgZmlsbDogIzQxODVGRjsKICAgICAgICB9CiAgICB9CgogIDwvc3R5bGU+CiAgPHBhdGggZD0iTTE1MCAwTDE4MCAzMEwxNTAgNjBMMTIwIDMwTDE1MCAwWiIgY2xhc3M9ImJsdWUtc2hhcGUiLz4KICA8cGF0aCBkPSJNMjEwIDYwTDI0MCA5MEwyMTAgMTIwTDE4MCA5MEwyMTAgNjBaIiBjbGFzcz0iYmx1ZS1zaGFwZSIvPgogIDxwYXRoIGQ9Ik00NTAgNjBMNDgwIDkwTDQ1MCAxMjBMNDIwIDkwTDQ1MCA2MFoiIGNsYXNzPSJibHVlLXNoYXBlIi8+CiAgPHBhdGggZD0iTTUxMCAxMjBMNTQwIDE1MEw1MTAgMTgwTDQ4MCAxNTBMNTEwIDEyMFoiIGNsYXNzPSJibHVlLXNoYXBlIi8+CiAgPHBhdGggZD0iTTQ1MCAxODBMNDgwIDIxMEw0NTAgMjQwTDQyMCAyMTBMNDUwIDE4MFoiIGNsYXNzPSJibHVlLXNoYXBlIi8+CiAgPHBhdGggZD0iTTM5MCAyNDBMNDIwIDI3MEwzOTAgMzAwTDM2MCAyNzBMMzkwIDI0MFoiIGNsYXNzPSJibHVlLXNoYXBlIi8+CiAgPHBhdGggZD0iTTMzMCAxODBMMzYwIDIxMEwzMzAgMjQwTDMwMCAyMTBMMzMwIDE4MFoiIGNsYXNzPSJibHVlLXNoYXBlIi8+CiAgPHBhdGggZD0iTTkwIDYwTDEyMCA5MEw5MCAxMjBMNjAgOTBMOTAgNjBaIiBjbGFzcz0iYmx1ZS1zaGFwZSIvPgogIDxwYXRoIGQ9Ik0zOTAgMEw0MjAgMzBMMTUwIDMwMEwwIDE1MEwzMCAxMjBMMTUwIDI0MEwzOTAgMFoiIGNsYXNzPSJkYXJrZXItYmx1ZS1zaGFwZSIvPgo8L3N2Zz4=',
+	BASELINE_HIGH: 'data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9IjEwMCUiIHdpZHRoPSIxMDAlIiB2aWV3Qm94PSIwIDAgNTQwIDMwMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8c3R5bGU+CiAgICAuZ3JlZW4tc2hhcGUgewogICAgICBmaWxsOiAjQzRFRUQwOyAvKiBMaWdodCBtb2RlICovCiAgICB9CgogICAgQG1lZGlhIChwcmVmZXJzLWNvbG9yLXNjaGVtZTogZGFyaykgewogICAgICAuZ3JlZW4tc2hhcGUgewogICAgICAgIGZpbGw6ICMxMjUyMjU7IC8qIERhcmsgbW9kZSAqLwogICAgICB9CiAgICB9CiAgPC9zdHlsZT4KICA8cGF0aCBkPSJNNDIwIDMwTDM5MCA2MEw0ODAgMTUwTDM5MCAyNDBMMzMwIDE4MEwzMDAgMjEwTDM5MCAzMDBMNTQwIDE1MEw0MjAgMzBaIiBjbGFzcz0iZ3JlZW4tc2hhcGUiLz4KICA8cGF0aCBkPSJNMTUwIDBMMzAgMTIwTDYwIDE1MEwxNTAgNjBMMjEwIDEyMEwyNDAgOTBMMTUwIDBaIiBjbGFzcz0iZ3JlZW4tc2hhcGUiLz4KICA8cGF0aCBkPSJNMzkwIDBMNDIwIDMwTDE1MCAzMDBMMCAxNTBMMzAgMTIwTDE1MCAyNDBMMzkwIDBaIiBmaWxsPSIjMUVBNDQ2Ii8+Cjwvc3ZnPg=='
 };
 
 const PATTERNS = {
@@ -48,6 +54,46 @@ function extractFeatureId(match) {
 	return match?.slice(1).find(group => group !== undefined)?.toLowerCase();
 }
 
+function isInsideWebFeatureIds(document, lineIndex) {
+	for (let i = lineIndex - 1; i >= 0; i--) {
+		const text = document.lineAt(i).text.trim();
+		if (text.startsWith('web-feature-ids:')) {
+			return true;
+		}
+		if (text && text !== '---' && !text.startsWith('-') && !text.startsWith('#')) {
+			return false;
+		}
+	}
+	return false;
+}
+
+function findFeatureIdsInLine(document, lineIndex) {
+	const lineText = document.lineAt(lineIndex).text;
+	const matches = [];
+
+	for (const match of lineText.matchAll(new RegExp(BASELINE_ID_REGEX, 'gi'))) {
+		const featureId = extractFeatureId(match);
+		if (featureId) {
+			matches.push({
+				featureId,
+				startingIndex: match.index + match[0].indexOf(featureId)
+			});
+		}
+	}
+
+	const yamlMatch = /^\s*-\s+([a-z-]+)\s*$/.exec(lineText);
+	if (yamlMatch) {
+		if (isInsideWebFeatureIds(document, lineIndex)) {
+			matches.push({
+				featureId: yamlMatch[1],
+				startingIndex: lineText.indexOf(yamlMatch[1])
+			});
+		}
+	}
+
+	return matches;
+}
+
 async function loadWebFeatures() {
 	try {
 		return await import('web-features');
@@ -61,33 +107,69 @@ async function activate(context) {
 	featureOptions = Object.entries(webFeatures.features)
 		.filter(([, feature]) => feature.kind === 'feature')
 		.map(([featureId, feature]) => {
-		return Object.assign(feature, {
-			featureId,
-			label: feature.name,
-			detail: feature.description,
-			description: featureId,
-			baselineStatus: getBaselineStatus(feature.status)
+			return Object.assign(feature, {
+				featureId,
+				label: feature.name,
+				detail: feature.description,
+				description: featureId,
+				baselineStatus: getBaselineStatus(feature.status)
+			});
 		});
-	});
 
 	diagnosticCollection = vscode.languages.createDiagnosticCollection('baseline');
 	context.subscriptions.push(diagnosticCollection);
+
+	DECORATION_LIMITED = vscode.window.createTextEditorDecorationType({
+		after: {
+			contentIconPath: vscode.Uri.parse(BaselineImages.BASELINE_LIMITED),
+			margin: '0 0 0 4px',
+			width: '1.44em',
+			height: '0.8em'
+		}
+	});
+
+	DECORATION_LOW = vscode.window.createTextEditorDecorationType({
+		after: {
+			contentIconPath: vscode.Uri.parse(BaselineImages.BASELINE_LOW),
+			margin: '0 0 0 4px',
+			width: '1.44em',
+			height: '0.8em'
+		}
+	});
+
+	DECORATION_HIGH = vscode.window.createTextEditorDecorationType({
+		after: {
+			contentIconPath: vscode.Uri.parse(BaselineImages.BASELINE_HIGH),
+			margin: '0 0 0 4px',
+			width: '1.44em',
+			height: '0.8em'
+		}
+	});
+
+	context.subscriptions.push(DECORATION_LIMITED, DECORATION_LOW, DECORATION_HIGH);
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand('baseline-vscode.baselineSearch', runBaselineSearch)
 	);
 	context.subscriptions.push(
-		vscode.languages.registerHoverProvider(['javascript', 'markdown', 'html'], new BaselineHoverProvider(context))
+		vscode.languages.registerHoverProvider(SUPPORTED_LANGUAGES, new BaselineHoverProvider(context))
 	);
 	context.subscriptions.push(
-		vscode.languages.registerCodeActionsProvider(['javascript', 'markdown', 'html'], new BaselineCodeActionProvider(), {
+		vscode.languages.registerCodeActionsProvider(SUPPORTED_LANGUAGES, new BaselineCodeActionProvider(), {
 			providedCodeActionKinds: [vscode.CodeActionKind.QuickFix]
 		})
+	);
+	context.subscriptions.push(
+		vscode.languages.registerDocumentLinkProvider(SUPPORTED_LANGUAGES, new BaselineDocumentLinkProvider())
 	);
 
 	vscode.workspace.textDocuments.forEach(document => {
 		validateBaselineFeatureIds(document);
 	});
+
+	vscode.window.onDidChangeVisibleTextEditors(editors => {
+		editors.forEach(editor => validateBaselineFeatureIds(editor.document));
+	}, null, context.subscriptions);
 
 	vscode.workspace.onDidChangeTextDocument(event => {
 		handleBaselineHotPhrase(event);
@@ -136,7 +218,7 @@ async function runBaselineSearch() {
 
 async function handleBaselineHotPhrase(event) {
 	const editor = vscode.window.activeTextEditor;
-	if (!editor || event.document !== editor.document || editor.document.lineCount === 0 || !['javascript', 'markdown', 'html'].includes(event.document.languageId)) {
+	if (!editor || event.document !== editor.document || editor.document.lineCount === 0 || !SUPPORTED_LANGUAGES.includes(event.document.languageId)) {
 		return;
 	}
 
@@ -162,23 +244,35 @@ async function handleBaselineHotPhrase(event) {
 
 
 function validateBaselineFeatureIds(document) {
-	if (!['javascript', 'markdown', 'html'].includes(document.languageId)) {
+	if (!SUPPORTED_LANGUAGES.includes(document.languageId)) {
 		return;
 	}
 	const issues = [];
+	const limitedRanges = [];
+	const lowRanges = [];
+	const highRanges = [];
+
 	for (let i = 0; i < document.lineCount; i++) {
-		const line = document.lineAt(i).text;
-		const matches = line.matchAll(new RegExp(BASELINE_ID_REGEX, 'gi'));
+		const matches = findFeatureIdsInLine(document, i);
 
 		for (const match of matches) {
-			const featureId = extractFeatureId(match);
+			const { featureId, startingIndex } = match;
+			const range = new vscode.Range(i, startingIndex, i, startingIndex + featureId.length);
+
 			if (isValidFeatureId(featureId)) {
+				const feature = webFeatures.features[featureId];
+				const status = feature.status?.baseline;
+
+				if (status === 'low') {
+					lowRanges.push(range);
+				} else if (status === 'high') {
+					highRanges.push(range);
+				} else {
+					limitedRanges.push(range);
+				}
 				continue;
 			}
 
-			const startingIndex = match.index + match[0].indexOf(featureId);
-			const range = new vscode.Range(i, startingIndex, i, startingIndex + featureId.length);
-			
 			let errorMessage = `Unrecognized Baseline feature ID: ${featureId}\n\nTry using the "Baseline search" command to find the feature you're looking for.`;
 			const feature = webFeatures.features[featureId];
 			if (feature) {
@@ -195,6 +289,13 @@ function validateBaselineFeatureIds(document) {
 	}
 
 	diagnosticCollection.set(document.uri, issues);
+
+	const editors = vscode.window.visibleTextEditors.filter(e => e.document === document);
+	editors.forEach(editor => {
+		editor.setDecorations(DECORATION_LIMITED, limitedRanges);
+		editor.setDecorations(DECORATION_LOW, lowRanges);
+		editor.setDecorations(DECORATION_HIGH, highRanges);
+	});
 }
 
 
@@ -204,13 +305,11 @@ class BaselineHoverProvider {
 	}
 
 	provideHover(document, position) {
-		const lineText = document.lineAt(position.line).text.substr(0, 100);
-		const matches = lineText.matchAll(new RegExp(BASELINE_ID_REGEX, 'gi'));
+		const matches = findFeatureIdsInLine(document, position.line);
 
 		for (const match of matches) {
-			const featureId = extractFeatureId(match);
-			const startingIndex = match.index;
-			const endingIndex = match.index + match[0].length;
+			const { featureId, startingIndex } = match;
+			const endingIndex = startingIndex + featureId.length;
 
 			if (position.character < startingIndex || position.character >= endingIndex) {
 				continue;
@@ -251,6 +350,31 @@ class BaselineCodeActionProvider {
 			}
 		}
 		return actions;
+	}
+}
+
+
+class BaselineDocumentLinkProvider {
+	provideDocumentLinks(document) {
+		const links = [];
+		for (let i = 0; i < document.lineCount; i++) {
+			const matches = findFeatureIdsInLine(document, i);
+
+			for (const match of matches) {
+				const { featureId, startingIndex } = match;
+				if (!isValidFeatureId(featureId)) {
+					continue;
+				}
+
+				const range = new vscode.Range(i, startingIndex, i, startingIndex + featureId.length);
+				const target = vscode.Uri.parse(`https://webstatus.dev/features/${featureId}/`);
+
+				const link = new vscode.DocumentLink(range, target);
+				link.tooltip = `View ${featureId} on webstatus.dev`;
+				links.push(link);
+			}
+		}
+		return links;
 	}
 }
 
@@ -324,7 +448,7 @@ function sanitizeFeatureName(featureName) {
 
 
 function getFeatureMarkdown(feature) {
-	return `### <img src="${getBaselineImg(feature.status)}" alt="Baseline icon" height="14" style="aspect-ratio: 25 / 14;" /> ${sanitizeFeatureName(feature.name)}
+	return `### <img src="${getBaselineImg(feature.status)}" alt="Baseline icon" width="25" height="14" align="center" /> ${sanitizeFeatureName(feature.name)}
 
 ${feature.description_html}
 
@@ -334,11 +458,11 @@ Browser version | Relase date
 --- | ---
 ${Object.keys(BROWSER_NAME).map((browser) => {
 	const version = feature.status?.support?.[browser];
-		if (!version) {
-			return `${getBrowserName(browser)} | 🅇`;
-		}
-		return `${getBrowserName(browser)} ${version} | ${getReleaseDate(browser, version)}`;
-	}).join('\n')}
+	if (!version) {
+		return `${getBrowserName(browser)} | 🅇`;
+	}
+	return `${getBrowserName(browser)} ${version} | ${getReleaseDate(browser, version)}`;
+}).join('\n')}
 `;
 }
 

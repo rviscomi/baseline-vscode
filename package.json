@@ -13,7 +13,9 @@
     "onStartupFinished",
     "onLanguage:javascript",
     "onLanguage:markdown",
-    "onLanguage:html"
+    "onLanguage:html",
+    "onLanguage:css",
+    "onLanguage:yaml"
   ],
   "main": "./extension.js",
   "contributes": {
