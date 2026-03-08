@@ -1,5 +1,6 @@
-const assert = require('assert');
-const { PATTERNS, extractFeatureId } = require('../extension');
+import assert from 'assert';
+import { PATTERNS } from '../constants.js';
+import { extractFeatureId } from '../utils.js';
 
 suite('Baseline Patterns Test Suite', () => {
 

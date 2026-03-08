@@ -1,11 +1,13 @@
 import globals from "globals";
+import tseslint from 'typescript-eslint';
 
-export default [
+export default tseslint.config(
     {
-        ignores: [".vscode-test/**", "node_modules/**"]
+        ignores: [".vscode-test/**", "node_modules/**", "out/**"]
     },
+    ...tseslint.configs.recommended,
     {
-    files: ["**/*.js"],
+        files: ["**/*.ts"],
     languageOptions: {
         globals: {
             ...globals.commonjs,
@@ -19,12 +21,7 @@ export default [
     },
 
     rules: {
-        "no-const-assign": "warn",
-        "no-this-before-super": "warn",
-        "no-undef": "warn",
-        "no-unreachable": "warn",
-        "no-unused-vars": "warn",
-        "constructor-super": "warn",
-        "valid-typeof": "warn",
+        "@typescript-eslint/no-unused-vars": "warn",
+        "@typescript-eslint/no-explicit-any": "off"
     },
-}];
+    });
