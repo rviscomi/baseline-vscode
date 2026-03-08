@@ -1,21 +1,22 @@
 import assert from 'assert';
 import { getBaselineStatus, getBrowserName, sanitizeFeatureName } from '../utils.js';
+import { FeatureStatus } from '../web-features.js';
 
 suite('Utils Test Suite', () => {
 
 	suite('getBaselineStatus', () => {
 		test('should handle missing status', () => {
 			assert.strictEqual(getBaselineStatus(undefined), 'Status unavailable');
-			assert.strictEqual(getBaselineStatus(null), 'Status unavailable');
+			assert.strictEqual(getBaselineStatus(null as unknown as FeatureStatus), 'Status unavailable');
 		});
 
-		test('should handle low baseline status', () => {
-			const status = { baseline: 'low', baseline_low_date: '2023-01-01' };
+		test('should handle newly baseline status', () => {
+			const status: FeatureStatus = { baseline: 'low', baseline_low_date: '2023-01-01' };
 			assert.strictEqual(getBaselineStatus(status), 'Baseline Newly available since 2023-01-01');
 		});
 
-		test('should handle high baseline status', () => {
-			const status = { baseline: 'high', baseline_high_date: '2020-01-01' };
+		test('should handle widely baseline status', () => {
+			const status: FeatureStatus = { baseline: 'high', baseline_high_date: '2020-01-01' };
 			assert.strictEqual(getBaselineStatus(status), 'Baseline Widely available since 2020-01-01');
 		});
 

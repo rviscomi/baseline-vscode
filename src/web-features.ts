@@ -1,5 +1,12 @@
 import { browsers, features } from 'web-features';
 
+export interface FeatureStatus {
+  baseline?: 'low' | 'high' | false;
+  baseline_low_date?: string;
+  baseline_high_date?: string;
+  support?: Record<string, string>;
+}
+
 export function getFeature(featureId: string) {
   return features[featureId];
 }

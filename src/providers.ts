@@ -30,7 +30,7 @@ export class BaselineHoverProvider implements vscode.HoverProvider {
 
 			const markdownString = new vscode.MarkdownString();
 			markdownString.supportHtml = true;
-			markdownString.baseUri = vscode.Uri.file(path.join(this.context.extensionPath, 'img', path.sep));
+			markdownString.baseUri = vscode.Uri.file(path.join(this.context.extensionPath, path.sep));
 			markdownString.appendMarkdown(getFeatureMarkdown(featureInfo));
 
 			const range = new vscode.Range(

@@ -1,6 +1,6 @@
-import { BROWSER_NAME, BaselineImages, BASELINE_ID_REGEX } from './constants.js';
+import { BROWSER_NAME, BASELINE_ID_REGEX } from './constants.js';
 import * as vscode from 'vscode';
-import { getReleaseDate } from './web-features.js';
+import { getReleaseDate, FeatureStatus } from './web-features.js';
 
 export function extractFeatureId(match: any) {
 	return match?.slice(1).find((group: any) => group !== undefined)?.toLowerCase();
@@ -46,7 +46,7 @@ export function findFeatureIdsInLine(document: vscode.TextDocument, lineIndex: n
 	return matches;
 }
 
-export function getBaselineStatus(status: any) {
+export function getBaselineStatus(status?: FeatureStatus) {
 	if (!status) {
 		return 'Status unavailable';
 	}
@@ -67,17 +67,17 @@ export function getBrowserName(browserId: string) {
 	return name || browserId;
 }
 
-export function getBaselineImg(status: any) {
+export function getBaselineImg(status?: FeatureStatus) {
 	if (!status) {
-		return BaselineImages.BASELINE_LIMITED;
+		return 'img/baseline-limited-icon.svg';
 	}
 	if (status.baseline == 'low') {
-		return BaselineImages.BASELINE_LOW;
+		return 'img/baseline-newly-icon.svg';
 	}
 	if (status.baseline == 'high') {
-		return BaselineImages.BASELINE_HIGH;
+		return 'img/baseline-widely-icon.svg';
 	}
-	return BaselineImages.BASELINE_LIMITED;
+	return 'img/baseline-limited-icon.svg';
 }
 
 

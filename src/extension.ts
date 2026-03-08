@@ -2,7 +2,6 @@ import * as vscode from 'vscode';
 import { getFeature, getAllFeatures, isValidFeatureId } from './web-features.js';
 import {
 	SUPPORTED_LANGUAGES,
-	BaselineImages,
 	PATTERNS
 } from './constants.js';
 import {
@@ -19,8 +18,8 @@ let diagnosticCollection: vscode.DiagnosticCollection;
 let featureOptions: any[] = [];
 
 let DECORATION_LIMITED: vscode.TextEditorDecorationType;
-let DECORATION_LOW: vscode.TextEditorDecorationType;
-let DECORATION_HIGH: vscode.TextEditorDecorationType;
+let DECORATION_NEWLY: vscode.TextEditorDecorationType;
+let DECORATION_WIDELY: vscode.TextEditorDecorationType;
 
 export async function activate(context: vscode.ExtensionContext) {
 	featureOptions = Object.entries(getAllFeatures())
@@ -40,32 +39,32 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	DECORATION_LIMITED = vscode.window.createTextEditorDecorationType({
 		after: {
-			contentIconPath: vscode.Uri.parse(BaselineImages.BASELINE_LIMITED),
+			contentIconPath: vscode.Uri.file(context.asAbsolutePath('img/baseline-limited-icon.svg')),
 			margin: '0 0 0 4px',
 			width: '1.44em',
 			height: '0.8em'
 		}
 	});
 
-	DECORATION_LOW = vscode.window.createTextEditorDecorationType({
+	DECORATION_NEWLY = vscode.window.createTextEditorDecorationType({
 		after: {
-			contentIconPath: vscode.Uri.parse(BaselineImages.BASELINE_LOW),
+			contentIconPath: vscode.Uri.file(context.asAbsolutePath('img/baseline-newly-icon.svg')),
 			margin: '0 0 0 4px',
 			width: '1.44em',
 			height: '0.8em'
 		}
 	});
 
-	DECORATION_HIGH = vscode.window.createTextEditorDecorationType({
+	DECORATION_WIDELY = vscode.window.createTextEditorDecorationType({
 		after: {
-			contentIconPath: vscode.Uri.parse(BaselineImages.BASELINE_HIGH),
+			contentIconPath: vscode.Uri.file(context.asAbsolutePath('img/baseline-widely-icon.svg')),
 			margin: '0 0 0 4px',
 			width: '1.44em',
 			height: '0.8em'
 		}
 	});
 
-	context.subscriptions.push(DECORATION_LIMITED, DECORATION_LOW, DECORATION_HIGH);
+	context.subscriptions.push(DECORATION_LIMITED, DECORATION_NEWLY, DECORATION_WIDELY);
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand('baseline-vscode.baselineSearch', runBaselineSearch)
@@ -119,10 +118,10 @@ async function runBaselineSearch() {
 	}
 
 	const { name: featureName, status } = feature;
-	const { baseline, baseline_low_date } = status || {};
+	const { baseline, baseline_low_date: baselineNewlyDate } = status || {};
 
-	const message = (baseline === 'low' || baseline === 'high') && baseline_low_date
-		? `${featureName} is ${baseline === 'high' ? 'Widely available' : 'Newly available'}. It's been Baseline since ${baseline_low_date}.`
+	const message = (baseline === 'low' || baseline === 'high') && baselineNewlyDate
+		? `${featureName} is ${baseline === 'high' ? 'Widely available' : 'Newly available'}. It's been Baseline since ${baselineNewlyDate}.`
 		: `${featureName} is not supported across all major browsers.`;
 
 	const selection = await vscode.window.showInformationMessage(message, 'Explore');
@@ -168,8 +167,8 @@ function validateBaselineFeatureIds(document: vscode.TextDocument) {
 	}
 	const issues: vscode.Diagnostic[] = [];
 	const limitedRanges: vscode.Range[] = [];
-	const lowRanges: vscode.Range[] = [];
-	const highRanges: vscode.Range[] = [];
+	const newlyRanges: vscode.Range[] = [];
+	const widelyRanges: vscode.Range[] = [];
 
 	for (let i = 0; i < document.lineCount; i++) {
 		const matches = findFeatureIdsInLine(document, i);
@@ -183,9 +182,9 @@ function validateBaselineFeatureIds(document: vscode.TextDocument) {
 				const status = feature.status?.baseline;
 
 				if (status === 'low') {
-					lowRanges.push(range);
+					newlyRanges.push(range);
 				} else if (status === 'high') {
-					highRanges.push(range);
+					widelyRanges.push(range);
 				} else {
 					limitedRanges.push(range);
 				}
@@ -212,8 +211,8 @@ function validateBaselineFeatureIds(document: vscode.TextDocument) {
 	const editors = vscode.window.visibleTextEditors.filter(e => e.document === document);
 	editors.forEach(editor => {
 		editor.setDecorations(DECORATION_LIMITED, limitedRanges);
-		editor.setDecorations(DECORATION_LOW, lowRanges);
-		editor.setDecorations(DECORATION_HIGH, highRanges);
+		editor.setDecorations(DECORATION_NEWLY, newlyRanges);
+		editor.setDecorations(DECORATION_WIDELY, widelyRanges);
 	});
 }
 
