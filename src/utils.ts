@@ -28,7 +28,7 @@ export function findFeatureIdsInLine(document: vscode.TextDocument, lineIndex: n
 		if (featureId) {
 			matches.push({
 				featureId,
-				startingIndex: match.index + match[0].indexOf(featureId)
+				startingIndex: match.index + match[0].toLowerCase().lastIndexOf(featureId)
 			});
 		}
 	}

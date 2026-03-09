@@ -38,8 +38,19 @@ suite('Baseline Patterns Test Suite', () => {
 			assert.strictEqual(extractFeatureId(match), 'fetch-priority');
 		});
 
+		test('should match {{ macros.BaselineStatus("accent-color") }}', () => {
+			const text = '{{ macros.BaselineStatus("accent-color") }}';
+			const match = text.match(PATTERNS.MACRO.full);
+			assert.ok(match, 'Should match');
+			assert.strictEqual(extractFeatureId(match), 'accent-color');
+		});
+
 		test('should trigger on macro prefix', () => {
 			assert.ok('{{ BASELINE_STATUS("'.match(PATTERNS.MACRO.trigger), 'Should trigger');
+		});
+
+		test('should trigger on macros prefix', () => {
+			assert.ok('{{ macros.BaselineStatus("'.match(PATTERNS.MACRO.trigger), 'Should trigger');
 		});
 	});
 
@@ -53,6 +64,27 @@ suite('Baseline Patterns Test Suite', () => {
 
 		test('should trigger on todo prefix', () => {
 			assert.ok('// TODO(baseline/'.match(PATTERNS.TODO.trigger), 'Should trigger');
+		});
+	});
+
+	suite('YAML pattern', () => {
+		test('should match keywords: webfeature_accent-color', () => {
+			const text = 'keywords: webfeature_accent-color';
+			const match = text.match(PATTERNS.YAML.full);
+			assert.ok(match, 'Should match');
+			assert.strictEqual(extractFeatureId(match), 'accent-color');
+		});
+
+		test('should match with multiple comma-separated keywords', () => {
+			const text = 'keywords: foo:bar,hello:world,test123,webfeature_accent-color';
+			const match = text.match(PATTERNS.YAML.full);
+			assert.ok(match, 'Should match');
+			assert.strictEqual(extractFeatureId(match), 'accent-color');
+		});
+
+		test('should trigger on yaml keyword prefix', () => {
+			assert.ok('keywords: webfeature_'.match(PATTERNS.YAML.trigger), 'Should trigger');
+			assert.ok('keywords: foo:bar, webfeature_'.match(PATTERNS.YAML.trigger), 'Should trigger');
 		});
 	});
 });

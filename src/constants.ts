@@ -39,12 +39,16 @@ export const PATTERNS = {
 		trigger: /<baseline-status[^>]*featureId=['"]?$/
 	},
 	MACRO: {
-		full: /{{\s*BASELINE_STATUS\(['"]?([a-z-]+)['"]?\)\s*}}/i,
-		trigger: /{{\s*BASELINE_STATUS\(['"]?$/
+		full: /{{\s*(?:macros\.BaselineStatus|BASELINE_STATUS)\(['"]?([a-z-]+)['"]?\)\s*}}/i,
+		trigger: /{{\s*(?:macros\.BaselineStatus|BASELINE_STATUS)\(['"]?$/
 	},
 	TODO: {
 		full: /TODO\(baseline\/([a-z-]+)\)/i,
 		trigger: /TODO\(baseline\/$/
+	},
+	YAML: {
+		full: /(?:^|\s)keywords:\s*(?:[^,\n]+,\s*)*webfeature_([a-z-]+)/i,
+		trigger: /(?:^|\s)keywords:\s*(?:[^,\n]+,\s*)*webfeature_$/i
 	}
 };
 
