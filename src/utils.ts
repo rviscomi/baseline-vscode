@@ -1,9 +1,9 @@
 import { BROWSER_NAME, BASELINE_ID_REGEX } from './constants.js';
 import * as vscode from 'vscode';
-import { getReleaseDate, FeatureStatus } from './web-features.js';
+import { getReleaseDate, FeatureStatus, FeatureOption } from './web-features.js';
 
-export function extractFeatureId(match: any) {
-	return match?.slice(1).find((group: any) => group !== undefined)?.toLowerCase();
+export function extractFeatureId(match: RegExpMatchArray): string | undefined {
+	return match?.slice(1).find((group: string) => group !== undefined)?.toLowerCase();
 }
 
 export function isInsideWebFeatureIds(document: vscode.TextDocument, lineIndex: number) {
@@ -19,9 +19,9 @@ export function isInsideWebFeatureIds(document: vscode.TextDocument, lineIndex: 
 	return false;
 }
 
-export function findFeatureIdsInLine(document: vscode.TextDocument, lineIndex: number) {
+export function findFeatureIdsInLine(document: vscode.TextDocument, lineIndex: number): { featureId: string; startingIndex: number }[] {
 	const lineText = document.lineAt(lineIndex).text;
-	const matches: any[] = [];
+	const matches: { featureId: string; startingIndex: number }[] = [];
 
 	for (const match of lineText.matchAll(new RegExp(BASELINE_ID_REGEX, 'gi'))) {
 		const featureId = extractFeatureId(match);
@@ -59,8 +59,8 @@ export function getBaselineStatus(status?: FeatureStatus) {
 	return 'Limited availability across major browsers';
 }
 
-export function getBrowserName(browserId: string) {
-	const name = (BROWSER_NAME as any)[browserId];
+export function getBrowserName(browserId: string): string {
+	const name = BROWSER_NAME[browserId];
 	if (!name) {
 		console.warn('Unknown browser ID:', browserId);
 	}
@@ -89,7 +89,7 @@ export function sanitizeFeatureName(featureName: string) {
 	return featureName;
 }
 
-export function getFeatureMarkdown(feature: any) {
+export function getFeatureMarkdown(feature: FeatureOption): string {
 	return `### <img src="${getBaselineImg(feature.status)}" alt="Baseline icon" width="25" height="14" align="center" /> ${sanitizeFeatureName(feature.name)}
 
 ${feature.description_html}

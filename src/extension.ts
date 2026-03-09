@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
-import { getFeature, getAllFeatures, isValidFeatureId } from './web-features.js';
+import { getFeature, getAllFeatures, isValidFeatureId, FeatureOption, FeatureData } from './web-features.js';
 import {
-	SUPPORTED_LANGUAGES,
-	PATTERNS
+	PATTERNS,
+	SUPPORTED_LANGUAGES
 } from './constants.js';
 import {
 	findFeatureIdsInLine,
@@ -15,7 +15,7 @@ import {
 } from './providers.js';
 
 let diagnosticCollection: vscode.DiagnosticCollection;
-let featureOptions: any[] = [];
+let featureOptions: FeatureOption[] = [];
 
 let DECORATION_LIMITED: vscode.TextEditorDecorationType;
 let DECORATION_NEWLY: vscode.TextEditorDecorationType;
@@ -23,7 +23,7 @@ let DECORATION_WIDELY: vscode.TextEditorDecorationType;
 
 export async function activate(context: vscode.ExtensionContext) {
 	featureOptions = Object.entries(getAllFeatures())
-		.filter(([, feature]) => feature.kind === 'feature')
+		.filter((entry): entry is [string, FeatureData] => entry[1].kind === 'feature')
 		.map(([featureId, feature]) => {
 			return Object.assign(feature, {
 				featureId,
@@ -135,8 +135,12 @@ async function runBaselineSearch() {
 
 
 async function handleBaselineHotPhrase(event: vscode.TextDocumentChangeEvent) {
+	if (!SUPPORTED_LANGUAGES.includes(event.document.languageId)) {
+		return;
+	}
+
 	const editor = vscode.window.activeTextEditor;
-	if (!editor || event.document !== editor.document || editor.document.lineCount === 0 || !SUPPORTED_LANGUAGES.includes(event.document.languageId)) {
+	if (!editor || event.document !== editor.document || editor.document.lineCount === 0) {
 		return;
 	}
 
@@ -165,6 +169,7 @@ function validateBaselineFeatureIds(document: vscode.TextDocument) {
 	if (!SUPPORTED_LANGUAGES.includes(document.languageId)) {
 		return;
 	}
+
 	const issues: vscode.Diagnostic[] = [];
 	const limitedRanges: vscode.Range[] = [];
 	const newlyRanges: vscode.Range[] = [];

@@ -11,12 +11,22 @@
     "Other"
   ],
   "activationEvents": [
-    "onStartupFinished",
     "onLanguage:javascript",
-    "onLanguage:markdown",
+    "onLanguage:javascriptreact",
+    "onLanguage:typescript",
+    "onLanguage:typescriptreact",
     "onLanguage:html",
     "onLanguage:css",
-    "onLanguage:yaml"
+    "onLanguage:scss",
+    "onLanguage:less",
+    "onLanguage:vue",
+    "onLanguage:svelte",
+    "onLanguage:astro",
+    "onLanguage:markdown",
+    "onLanguage:mdx",
+    "onLanguage:yaml",
+    "onLanguage:json",
+    "onLanguage:jsonc"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -29,6 +39,7 @@
   },
   "scripts": {
     "compile": "tsc -p ./",
+    "typecheck": "tsc --noEmit",
     "watch": "tsc -watch -p ./",
     "lint": "eslint .",
     "pretest": "npm run compile && npm run lint",

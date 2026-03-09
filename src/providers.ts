@@ -1,13 +1,13 @@
 import * as vscode from 'vscode';
 import path from 'path';
 import { findFeatureIdsInLine, getFeatureMarkdown } from './utils.js';
-import { getFeature, isValidFeatureId } from './web-features.js';
+import { getFeature, FeatureOption } from './web-features.js';
 
 export class BaselineHoverProvider implements vscode.HoverProvider {
 	private context: vscode.ExtensionContext;
-	private featureOptions: any[];
+	private featureOptions: FeatureOption[];
 
-	constructor(context: vscode.ExtensionContext, featureOptions: any[]) {
+	constructor(context: vscode.ExtensionContext, featureOptions: FeatureOption[]) {
 		this.context = context;
 		this.featureOptions = featureOptions;
 	}
@@ -74,7 +74,8 @@ export class BaselineDocumentLinkProvider implements vscode.DocumentLinkProvider
 
 			for (const match of matches) {
 				const { featureId, startingIndex } = match;
-				if (!isValidFeatureId(featureId)) {
+				const feature = getFeature(featureId);
+				if (!feature || feature.kind !== 'feature') {
 					continue;
 				}
 
@@ -82,7 +83,7 @@ export class BaselineDocumentLinkProvider implements vscode.DocumentLinkProvider
 				const target = vscode.Uri.parse(`https://webstatus.dev/features/${featureId}/`);
 
 				const link = new vscode.DocumentLink(range, target);
-				link.tooltip = `View ${featureId} on webstatus.dev`;
+				link.tooltip = `View ${feature.name} on webstatus.dev`;
 				links.push(link);
 			}
 		}

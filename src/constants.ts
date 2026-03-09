@@ -1,4 +1,4 @@
-export const BROWSER_NAME = {
+export const BROWSER_NAME: Record<string, string> = {
 	'chrome': 'Chrome',
 	'chrome_android': 'Chrome Android',
 	'edge': 'Edge',
@@ -8,8 +8,26 @@ export const BROWSER_NAME = {
 	'firefox_android': 'Firefox for Android'
 };
 
-export const SUPPORTED_LANGUAGES = ['javascript', 'markdown', 'html', 'css', 'yaml'];
 
+
+export const SUPPORTED_LANGUAGES: string[] = [
+	'javascript',
+	'javascriptreact',
+	'typescript',
+	'typescriptreact',
+	'html',
+	'css',
+	'scss',
+	'less',
+	'vue',
+	'svelte',
+	'astro',
+	'markdown',
+	'mdx',
+	'yaml',
+	'json',
+	'jsonc'
+];
 
 export const PATTERNS = {
 	PREFIX: {

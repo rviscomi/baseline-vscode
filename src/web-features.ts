@@ -1,33 +1,38 @@
 import { browsers, features } from 'web-features';
 
-export interface FeatureStatus {
-  baseline?: 'low' | 'high' | false;
-  baseline_low_date?: string;
-  baseline_high_date?: string;
-  support?: Record<string, string>;
-}
+export type WebFeature = typeof features[keyof typeof features];
+export type FeatureData = Extract<WebFeature, { kind: 'feature' }>;
+export type FeatureStatus = FeatureData['status'];
 
-export function getFeature(featureId: string) {
+export type FeatureOption = FeatureData & {
+  featureId: string;
+  label: string;
+  detail?: string;
+  description?: string;
+  baselineStatus: string;
+};
+
+export function getFeature(featureId: string): WebFeature | undefined {
   return features[featureId];
 }
 
-export function getAllFeatures() {
+export function getAllFeatures(): typeof features {
   return features;
 }
 
-export function isValidFeatureId(featureId: string) {
+export function isValidFeatureId(featureId: string): boolean {
   const feature = getFeature(featureId);
   return Boolean(feature && feature.kind === 'feature');
 }
 
-export function getReleaseDate(browserId: string, version: string) {
-  const browser = browsers[browserId];
+export function getReleaseDate(browserId: string, version: string): string {
+  const browser = browsers[browserId as keyof typeof browsers];
   if (!browser) {
     console.warn('Unknown browser ID:', browserId);
     return 'Unknown';
   }
 
-  const release = browser.releases.find((r: any) => r.version === version);
+  const release = browser.releases.find((r: { version: string, date: string }) => r.version === version);
   if (!release) {
     console.warn('Unknown version for browser', browserId, version);
     return 'Unknown';
