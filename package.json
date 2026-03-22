@@ -1,14 +1,31 @@
 {
   "name": "baseline-vscode",
   "displayName": "Baseline",
-  "description": "",
+  "description": "Search for web platform features and view their Baseline browser support status directly in your editor.",
   "version": "0.0.1",
+  "publisher": "rviscomi",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rviscomi/baseline-vscode"
+  },
+  "homepage": "https://github.com/rviscomi/baseline-vscode#readme",
+  "bugs": {
+    "url": "https://github.com/rviscomi/baseline-vscode/issues"
+  },
+  "license": "Apache-2.0",
   "engines": {
     "vscode": "^1.100.0"
   },
   "categories": [
     "Other"
+  ],
+  "keywords": [
+    "baseline",
+    "web features",
+    "web platform",
+    "browser compatibility",
+    "mdn"
   ],
   "activationEvents": [
     "onLanguage:javascript",
@@ -45,6 +62,9 @@
     "pretest": "npm run compile && npm run lint",
     "test": "vscode-test"
   },
+  "dependencies": {
+    "web-features": "^3.19.0"
+  },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/mocha": "^10.0.10",
@@ -57,7 +77,6 @@
     "eslint": "^10.0.3",
     "globals": "^17.4.0",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.56.1",
-    "web-features": "^3.19.0"
+    "typescript-eslint": "^8.56.1"
   }
 }
