@@ -1,55 +1,87 @@
 {
   "name": "baseline-vscode",
   "displayName": "Baseline",
-  "description": "",
+  "description": "Search for web platform features and view their Baseline browser support status directly in your editor.",
   "version": "0.0.1",
+  "publisher": "rviscomi",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rviscomi/baseline-vscode"
+  },
+  "homepage": "https://github.com/rviscomi/baseline-vscode#readme",
+  "bugs": {
+    "url": "https://github.com/rviscomi/baseline-vscode/issues"
+  },
+  "license": "Apache-2.0",
   "engines": {
-    "vscode": "^1.97.0"
+    "vscode": "^1.100.0"
   },
   "categories": [
     "Other"
   ],
-  "activationEvents": [
-    "onLanguage"
+  "keywords": [
+    "baseline",
+    "web features",
+    "web platform",
+    "browser compatibility",
+    "mdn"
   ],
-  "main": "./extension.js",
+  "activationEvents": [
+    "onLanguage:javascript",
+    "onLanguage:javascriptreact",
+    "onLanguage:typescript",
+    "onLanguage:typescriptreact",
+    "onLanguage:html",
+    "onLanguage:css",
+    "onLanguage:scss",
+    "onLanguage:less",
+    "onLanguage:vue",
+    "onLanguage:svelte",
+    "onLanguage:astro",
+    "onLanguage:markdown",
+    "onLanguage:mdx",
+    "onLanguage:yaml",
+    "onLanguage:json",
+    "onLanguage:jsonc"
+  ],
+  "icon": "img/icon.png",
+  "main": "./out/extension.js",
   "contributes": {
-    "configuration": {
-      "title": "Baseline",
-      "properties": {
-        "baseline.allowedFileExtensions": {
-          "type": "array",
-          "default": ["html", "pug", "css", "scss", "js", "jsx", "ts", "tsx"],
-          "description": "File extensions to include when scanning for Baseline TODOs (without leading .)",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
     "commands": [
       {
         "command": "baseline-vscode.baselineSearch",
         "title": "Baseline search"
-      },
-      {
-        "command": "baseline-vscode.scanBaselineTodos",
-        "title": "Baseline scan"
       }
     ]
   },
   "scripts": {
+    "compile": "tsc -p ./",
+    "typecheck": "tsc --noEmit",
+    "watch": "tsc -watch -p ./",
     "lint": "eslint .",
-    "pretest": "npm run lint",
+    "package": "npx vsce package",
+    "publish": "npx dotenv -e .env -- ovsx publish",
+    "pretest": "npm run compile && npm run lint",
     "test": "vscode-test"
   },
+  "dependencies": {
+    "web-features": "^3.22.0"
+  },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/mocha": "^10.0.10",
-    "@types/node": "^20.17.19",
-    "@types/vscode": "^1.97.0",
-    "@vscode/test-cli": "^0.0.10",
-    "@vscode/test-electron": "^2.4.1",
-    "eslint": "^9.21.0",
-    "web-features": "^2.26.0"
+    "@types/node": "^25.3.5",
+    "@types/vscode": "^1.100.0",
+    "@typescript-eslint/eslint-plugin": "^8.56.1",
+    "@typescript-eslint/parser": "^8.56.1",
+    "@vscode/test-cli": "^0.0.12",
+    "@vscode/test-electron": "^2.5.2",
+    "dotenv-cli": "^11.0.0",
+    "eslint": "^10.0.3",
+    "globals": "^17.4.0",
+    "ovsx": "^0.10.10",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.56.1"
   }
 }
