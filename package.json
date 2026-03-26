@@ -45,6 +45,7 @@
     "onLanguage:json",
     "onLanguage:jsonc"
   ],
+  "icon": "img/icon.png",
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
@@ -59,11 +60,13 @@
     "typecheck": "tsc --noEmit",
     "watch": "tsc -watch -p ./",
     "lint": "eslint .",
+    "package": "npx vsce package",
+    "publish": "npx dotenv -e .env -- ovsx publish",
     "pretest": "npm run compile && npm run lint",
     "test": "vscode-test"
   },
   "dependencies": {
-    "web-features": "^3.19.0"
+    "web-features": "^3.22.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -74,8 +77,10 @@
     "@typescript-eslint/parser": "^8.56.1",
     "@vscode/test-cli": "^0.0.12",
     "@vscode/test-electron": "^2.5.2",
+    "dotenv-cli": "^11.0.0",
     "eslint": "^10.0.3",
     "globals": "^17.4.0",
+    "ovsx": "^0.10.10",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.56.1"
   }
