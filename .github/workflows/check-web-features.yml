@@ -1,0 +1,65 @@
+name: Check web-features
+
+on:
+  schedule:
+    - cron: '0 * * * *' # Hourly
+  workflow_dispatch: # Manual trigger
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  check-and-update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check for updates
+        id: check_updates
+        run: |
+          outdated_json=$(npm outdated web-features --json || true)
+          if [ "$outdated_json" != "{}" ] && [ "$outdated_json" != "" ]; then
+            latest_version=$(echo "$outdated_json" | jq -r '."web-features".latest')
+            echo "update_available=true" >> $GITHUB_OUTPUT
+            echo "latest_version=$latest_version" >> $GITHUB_OUTPUT
+          else
+            echo "update_available=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run tests if update available
+        if: steps.check_updates.outputs.update_available == 'true'
+        run: |
+          npm install web-features@${{ steps.check_updates.outputs.latest_version }}
+          npm run compile
+          npm run lint
+          npm test
+
+      - name: Commit and Push if tests pass
+        if: steps.check_updates.outputs.update_available == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          branch_name="chore/update-web-features-${{ steps.check_updates.outputs.latest_version }}"
+          git checkout -b "$branch_name"
+          
+          git add package.json package-lock.json
+          git commit -m "chore: update web-features to ${{ steps.check_updates.outputs.latest_version }}"
+          npm version patch -m "chore: bump version to %s [skip ci]"
+          
+          # Push branch and tags using PAT
+          git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }} "$branch_name" --tags
+          
+          # Create and merge PR
+          gh pr create --title "chore: update web-features to ${{ steps.check_updates.outputs.latest_version }}" --body "Automated update of web-features. Tests passed." --head "$branch_name" --base main
+          gh pr merge --merge --delete-branch "$branch_name"
