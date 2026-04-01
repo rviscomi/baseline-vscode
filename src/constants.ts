@@ -29,6 +29,11 @@ export const SUPPORTED_LANGUAGES: string[] = [
 	'jsonc'
 ];
 
+export const IGNORE_LIST = [
+	'feature-id',
+	'example'
+];
+
 export const PATTERNS = {
 	PREFIX: {
 		full: /baseline\/([a-z-]+)\b/i,

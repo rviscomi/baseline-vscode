@@ -1,4 +1,4 @@
-import { BROWSER_NAME, BASELINE_ID_REGEX } from './constants.js';
+import { BROWSER_NAME, BASELINE_ID_REGEX, IGNORE_LIST } from './constants.js';
 import * as vscode from 'vscode';
 import { getReleaseDate, FeatureStatus, FeatureOption } from './web-features.js';
 
@@ -25,7 +25,7 @@ export function findFeatureIdsInLine(document: vscode.TextDocument, lineIndex: n
 
 	for (const match of lineText.matchAll(new RegExp(BASELINE_ID_REGEX, 'gi'))) {
 		const featureId = extractFeatureId(match);
-		if (featureId) {
+		if (featureId && !IGNORE_LIST.includes(featureId)) {
 			matches.push({
 				featureId,
 				startingIndex: match.index + match[0].toLowerCase().lastIndexOf(featureId)
@@ -35,10 +35,11 @@ export function findFeatureIdsInLine(document: vscode.TextDocument, lineIndex: n
 
 	const yamlMatch = /^\s*-\s+([a-z-]+)\s*$/.exec(lineText);
 	if (yamlMatch) {
-		if (isInsideWebFeatureIds(document, lineIndex)) {
+		const featureId = yamlMatch[1];
+		if (isInsideWebFeatureIds(document, lineIndex) && !IGNORE_LIST.includes(featureId)) {
 			matches.push({
-				featureId: yamlMatch[1],
-				startingIndex: lineText.indexOf(yamlMatch[1])
+				featureId,
+				startingIndex: lineText.indexOf(featureId)
 			});
 		}
 	}
