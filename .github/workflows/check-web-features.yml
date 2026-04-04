@@ -45,7 +45,7 @@ jobs:
       - name: Commit and Push if tests pass
         if: steps.check_updates.outputs.update_available == 'true'
         env:
-          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
