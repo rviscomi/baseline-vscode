@@ -40,7 +40,7 @@ jobs:
           npm install web-features@${{ steps.check_updates.outputs.latest_version }}
           npm run compile
           npm run lint
-          npm test
+          xvfb-run -a npm test
 
       - name: Commit and Push if tests pass
         if: steps.check_updates.outputs.update_available == 'true'
