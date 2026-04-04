@@ -17,6 +17,8 @@ jobs:
 
       - run: npm ci
 
+      - run: npm run compile
+
       - run: npx ovsx publish
         env:
           OVSX_PAT: ${{ secrets.OVSX_PAT }}
