@@ -63,3 +63,8 @@ jobs:
           # Create and merge PR
           gh pr create --title "chore: update web-features to ${{ steps.check_updates.outputs.latest_version }}" --body "Automated update of web-features. Tests passed." --head "$branch_name" --base main
           gh pr merge --merge --delete-branch "$branch_name"
+          
+          # Trigger publish workflow automatically
+          tag_name=$(git describe --tags --abbrev=0)
+          gh workflow run publish.yml --ref "$tag_name"
+
