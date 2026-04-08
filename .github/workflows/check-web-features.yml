@@ -55,7 +55,7 @@ jobs:
           
           git add package.json package-lock.json
           git commit -m "chore: update web-features to ${{ steps.check_updates.outputs.latest_version }}"
-          npm version patch -m "chore: bump version to %s [skip ci]"
+          npm version patch -m "chore: bump version to %s"
           
           # Push branch and tags using PAT
           git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }} "$branch_name" --tags
