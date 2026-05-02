@@ -2,7 +2,7 @@
   "name": "baseline-vscode",
   "displayName": "Baseline",
   "description": "Search for web platform features and view their Baseline browser support status directly in your editor.",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "publisher": "rviscomi",
   "type": "module",
   "repository": {
@@ -66,7 +66,7 @@
     "test": "vscode-test"
   },
   "dependencies": {
-    "web-features": "^3.25.0"
+    "web-features": "^3.26.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
