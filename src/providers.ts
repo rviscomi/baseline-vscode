@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import path from 'path';
-import { findFeatureIdsInLine, getFeatureMarkdown } from './utils.js';
+import { findFeatureIdsInLine, getFeatureMarkdown, getCompatFeatureMarkdown } from './utils.js';
 import { getFeature, FeatureOption } from './web-features.js';
 
 export class BaselineHoverProvider implements vscode.HoverProvider {
@@ -16,8 +16,7 @@ export class BaselineHoverProvider implements vscode.HoverProvider {
 		const matches = findFeatureIdsInLine(document, position.line);
 
 		for (const match of matches) {
-			const { featureId, startingIndex } = match;
-			const endingIndex = startingIndex + featureId.length;
+			const { featureId, startingIndex, endingIndex, compatKey } = match;
 
 			if (position.character < startingIndex || position.character >= endingIndex) {
 				continue;
@@ -31,7 +30,12 @@ export class BaselineHoverProvider implements vscode.HoverProvider {
 			const markdownString = new vscode.MarkdownString();
 			markdownString.supportHtml = true;
 			markdownString.baseUri = vscode.Uri.file(path.join(this.context.extensionPath, path.sep));
-			markdownString.appendMarkdown(getFeatureMarkdown(featureInfo));
+			
+			if (compatKey) {
+				markdownString.appendMarkdown(getCompatFeatureMarkdown(featureInfo, compatKey));
+			} else {
+				markdownString.appendMarkdown(getFeatureMarkdown(featureInfo));
+			}
 
 			const range = new vscode.Range(
 				position.line, startingIndex, position.line, endingIndex
@@ -73,13 +77,13 @@ export class BaselineDocumentLinkProvider implements vscode.DocumentLinkProvider
 			const matches = findFeatureIdsInLine(document, i);
 
 			for (const match of matches) {
-				const { featureId, startingIndex } = match;
+				const { featureId, startingIndex, endingIndex } = match;
 				const feature = getFeature(featureId);
 				if (!feature || feature.kind !== 'feature') {
 					continue;
 				}
 
-				const range = new vscode.Range(i, startingIndex, i, startingIndex + featureId.length);
+				const range = new vscode.Range(i, startingIndex, i, endingIndex);
 				const target = vscode.Uri.parse(`https://webstatus.dev/features/${featureId}/`);
 
 				const link = new vscode.DocumentLink(range, target);

@@ -38,6 +38,22 @@ suite('Baseline Patterns Test Suite', () => {
 			assert.strictEqual(extractFeatureId(match), 'fetch-priority');
 		});
 
+		test('should match {{ BASELINE_STATUS("webauthn", "api.PublicKeyCredential.getClientCapabilities_static") }}', () => {
+			const text = '{{ BASELINE_STATUS("webauthn", "api.PublicKeyCredential.getClientCapabilities_static") }}';
+			const match = text.match(PATTERNS.MACRO.full);
+			assert.ok(match, 'Should match');
+			assert.strictEqual(match[1], 'webauthn');
+			assert.strictEqual(match[2], 'api.PublicKeyCredential.getClientCapabilities_static');
+		});
+
+		test('should match without second parameter', () => {
+			const text = '{{ BASELINE_STATUS("webauthn") }}';
+			const match = text.match(PATTERNS.MACRO.full);
+			assert.ok(match, 'Should match');
+			assert.strictEqual(match[1], 'webauthn');
+			assert.strictEqual(match[2], undefined);
+		});
+
 		test('should match {{ macros.BaselineStatus("accent-color") }}', () => {
 			const text = '{{ macros.BaselineStatus("accent-color") }}';
 			const match = text.match(PATTERNS.MACRO.full);

@@ -1,5 +1,6 @@
 import assert from 'assert';
-import { getBaselineStatus, getBrowserName, sanitizeFeatureName } from '../utils.js';
+import * as vscode from 'vscode';
+import { getBaselineStatus, getBrowserName, sanitizeFeatureName, findFeatureIdsInLine } from '../utils.js';
 import { FeatureStatus } from '../web-features.js';
 
 suite('Utils Test Suite', () => {
@@ -44,6 +45,38 @@ suite('Utils Test Suite', () => {
 
 		test('should not modify normal names', () => {
 			assert.strictEqual(sanitizeFeatureName('flexbox'), 'flexbox');
+		});
+	});
+
+	suite('findFeatureIdsInLine', () => {
+		test('should find feature ID in single parameter macro', () => {
+			const mockDoc = {
+				lineAt() {
+					return { text: '{{ BASELINE_STATUS("webauthn") }}' };
+				}
+			} as unknown as vscode.TextDocument;
+
+			const matches = findFeatureIdsInLine(mockDoc, 0);
+			assert.strictEqual(matches.length, 1);
+			assert.strictEqual(matches[0].featureId, 'webauthn');
+			assert.strictEqual(matches[0].compatKey, undefined);
+			assert.strictEqual(matches[0].startingIndex, 20);
+			assert.strictEqual(matches[0].endingIndex, 28);
+		});
+
+		test('should find feature ID and compat key in dual parameter macro', () => {
+			const mockDoc = {
+				lineAt() {
+					return { text: '{{ BASELINE_STATUS("webauthn", "api.PublicKeyCredential.getClientCapabilities_static") }}' };
+				}
+			} as unknown as vscode.TextDocument;
+
+			const matches = findFeatureIdsInLine(mockDoc, 0);
+			assert.strictEqual(matches.length, 1);
+			assert.strictEqual(matches[0].featureId, 'webauthn');
+			assert.strictEqual(matches[0].compatKey, 'api.PublicKeyCredential.getClientCapabilities_static');
+			assert.strictEqual(matches[0].startingIndex, 20);
+			assert.strictEqual(matches[0].endingIndex, 84);
 		});
 	});
 });

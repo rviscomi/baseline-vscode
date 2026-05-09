@@ -179,12 +179,33 @@ function validateBaselineFeatureIds(document: vscode.TextDocument) {
 		const matches = findFeatureIdsInLine(document, i);
 
 		for (const match of matches) {
-			const { featureId, startingIndex } = match;
-			const range = new vscode.Range(i, startingIndex, i, startingIndex + featureId.length);
+			const { featureId, startingIndex, endingIndex, compatKey } = match;
+			const range = new vscode.Range(i, startingIndex, i, endingIndex);
 
 			if (isValidFeatureId(featureId)) {
 				const feature = getFeature(featureId);
-				const status = feature.status?.baseline;
+
+				if (compatKey && feature?.kind === 'feature') {
+					const compatStatus = feature.status?.by_compat_key?.[compatKey];
+					if (compatStatus) {
+						const status = compatStatus.baseline;
+						if (status === 'low') {
+							newlyRanges.push(range);
+						} else if (status === 'high') {
+							widelyRanges.push(range);
+						} else {
+							limitedRanges.push(range);
+						}
+						continue;
+					} else {
+						const errorMessage = `Unrecognized Baseline subfeature key: '${compatKey}' for feature '${featureId}'.`;
+						const diagnostic = new vscode.Diagnostic(range, errorMessage, vscode.DiagnosticSeverity.Error);
+						issues.push(diagnostic);
+						continue;
+					}
+				}
+
+				const status = feature?.status?.baseline;
 
 				if (status === 'low') {
 					newlyRanges.push(range);
