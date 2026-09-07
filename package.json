@@ -61,7 +61,9 @@
     "watch": "tsc -watch -p ./",
     "lint": "eslint .",
     "package": "npx vsce package",
-    "publish": "npx dotenv -e .env -- ovsx publish",
+    "publish:vscode": "npx dotenv -e .env -- vsce publish",
+    "publish:openvsx": "npx dotenv -e .env -- ovsx publish",
+    "publish": "npm run publish:vscode && npm run publish:openvsx",
     "pretest": "npm run compile && npm run lint",
     "test": "vscode-test"
   },
