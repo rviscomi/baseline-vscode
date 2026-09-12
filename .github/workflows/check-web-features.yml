@@ -68,3 +68,33 @@ jobs:
           tag_name=$(git describe --tags --abbrev=0)
           gh workflow run publish.yml --ref "$tag_name"
 
+      - name: Check published status if no new version
+        if: steps.check_updates.outputs.update_available != 'true'
+        id: check_published
+        run: |
+          current_version=$(jq -r .version package.json)
+          echo "Checking if v$current_version is published on VS Code Marketplace and Open VSX..."
+          
+          published_vscode=$(npx @vscode/vsce show rviscomi.baseline-vscode --json 2>/dev/null | jq -r ".versions[] | select(.version == \"$current_version\") | .version" || true)
+          published_openvsx=$(npx ovsx get --metadata rviscomi.baseline-vscode 2>/dev/null | jq -r ".allVersions[\"$current_version\"] // empty" || true)
+          
+          if [ -z "$published_vscode" ]; then
+            echo "Version $current_version is missing on VS Code Marketplace!"
+            echo "missing_publish=true" >> $GITHUB_OUTPUT
+          elif [ -z "$published_openvsx" ]; then
+            echo "Version $current_version is missing on Open VSX!"
+            echo "missing_publish=true" >> $GITHUB_OUTPUT
+          else
+            echo "Version $current_version is published on both registries."
+            echo "missing_publish=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Trigger publish for unpublished version
+        if: steps.check_updates.outputs.update_available != 'true' && steps.check_published.outputs.missing_publish == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+        run: |
+          current_version=$(jq -r .version package.json)
+          echo "Triggering publish workflow for v$current_version..."
+          gh workflow run publish.yml --ref "v$current_version"
+
