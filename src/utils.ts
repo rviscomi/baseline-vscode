@@ -1,6 +1,6 @@
 import { BROWSER_NAME, PATTERNS, IGNORE_LIST } from './constants.js';
 import * as vscode from 'vscode';
-import { getReleaseDate, FeatureStatus, FeatureOption } from './web-features.js';
+import { getReleaseDate, FeatureStatus, FeatureOption, getFeatureByCompatKey } from './web-features.js';
 
 export interface FeatureMatch {
 	featureId: string;
@@ -32,16 +32,26 @@ export function findFeatureIdsInLine(document: vscode.TextDocument, lineIndex: n
 
 	for (const [patternName, pattern] of Object.entries(PATTERNS)) {
 		for (const match of lineText.matchAll(new RegExp(pattern.full, 'gi'))) {
-			const featureId = match[1]?.toLowerCase();
-			if (featureId && !IGNORE_LIST.includes(featureId)) {
-				const compatKey = patternName === 'MACRO' ? match[2] : undefined;
+			const matchedText = match[1];
+			if (matchedText && !IGNORE_LIST.includes(matchedText.toLowerCase())) {
+				let featureId = matchedText.toLowerCase();
+				let compatKey = patternName === 'MACRO' ? match[2] : undefined;
+
+				if (!compatKey) {
+					const compatMatch = getFeatureByCompatKey(matchedText);
+					if (compatMatch) {
+						featureId = compatMatch.featureId;
+						compatKey = compatMatch.compatKey;
+					}
+				}
+
 				const matchStr = match[0];
 
 				const featureIdStartInMatch = matchStr.indexOf(match[1]);
 				const startingIndex = match.index + featureIdStartInMatch;
 				
 				let endingIndex: number;
-				if (compatKey) {
+				if (patternName === 'MACRO' && match[2]) {
 					const compatKeyStartInMatch = matchStr.lastIndexOf(match[2]);
 					endingIndex = match.index + compatKeyStartInMatch + match[2].length;
 				} else {

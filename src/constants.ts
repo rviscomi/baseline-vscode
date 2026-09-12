@@ -36,7 +36,7 @@ export const IGNORE_LIST = [
 
 export const PATTERNS = {
 	PREFIX: {
-		full: /(?<![/\\.\w-])baseline\/([a-z-]+)(?![/\w-]|(?:\.[a-z0-9]))/i,
+		full: /(?<![/\\.\w-])baseline\/((?:api|css|html|http|javascript|manifests|svg|mediatypes|mathml|webdriver|webassembly)\.[a-zA-Z0-9_@-]+(?:\.[a-zA-Z0-9_@-]+)*|[a-z-]+(?![/\w-]|(?:\.[a-z0-9])))/i,
 		trigger: /(?<![/\\.\w-])baseline\/$/
 	},
 	TAG: {
@@ -48,7 +48,7 @@ export const PATTERNS = {
 		trigger: /{{\s*(?:macros\.BaselineStatus|BASELINE_STATUS)\(['"]?$/
 	},
 	TODO: {
-		full: /TODO\(baseline\/([a-z-]+)\)/i,
+		full: /TODO\(baseline\/([a-zA-Z0-9_@-]+(?:\.[a-zA-Z0-9_@-]+)*)\)/i,
 		trigger: /TODO\(baseline\/$/
 	},
 	YAML: {

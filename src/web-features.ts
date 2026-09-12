@@ -12,8 +12,37 @@ export type FeatureOption = FeatureData & {
   baselineStatus: string;
 };
 
+export interface CompatFeatureMatch {
+  featureId: string;
+  compatKey: string;
+  feature: FeatureData;
+}
+
+const bcdMap = new Map<string, CompatFeatureMatch>();
+
+function initBcdMap() {
+  for (const [featureId, feature] of Object.entries(features)) {
+    if (feature.kind === 'feature' && feature.compat_features) {
+      for (const compatKey of feature.compat_features) {
+        const entry: CompatFeatureMatch = { featureId, compatKey, feature };
+        bcdMap.set(compatKey, entry);
+        if (!bcdMap.has(compatKey.toLowerCase())) {
+          bcdMap.set(compatKey.toLowerCase(), entry);
+        }
+      }
+    }
+  }
+}
+
 export function getFeature(featureId: string): WebFeature | undefined {
   return features[featureId];
+}
+
+export function getFeatureByCompatKey(compatKey: string): CompatFeatureMatch | undefined {
+  if (bcdMap.size === 0) {
+    initBcdMap();
+  }
+  return bcdMap.get(compatKey) ?? bcdMap.get(compatKey.toLowerCase());
 }
 
 export function getAllFeatures(): typeof features {
@@ -23,6 +52,10 @@ export function getAllFeatures(): typeof features {
 export function isValidFeatureId(featureId: string): boolean {
   const feature = getFeature(featureId);
   return Boolean(feature && feature.kind === 'feature');
+}
+
+export function isValidCompatKey(compatKey: string): boolean {
+  return Boolean(getFeatureByCompatKey(compatKey));
 }
 
 export function getReleaseDate(browserId: string, version: string): string {

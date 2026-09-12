@@ -1,5 +1,5 @@
 import assert from 'assert';
-import { getFeature, getAllFeatures, isValidFeatureId, getReleaseDate } from '../web-features.js';
+import { getFeature, getAllFeatures, isValidFeatureId, getReleaseDate, getFeatureByCompatKey, isValidCompatKey } from '../web-features.js';
 
 suite('Web Features Test Suite', () => {
 
@@ -52,6 +52,40 @@ suite('Web Features Test Suite', () => {
 
     test('should handle unknown version gracefully', () => {
       assert.strictEqual(getReleaseDate('chrome', '9999'), 'Unknown');
+    });
+  });
+
+  suite('getFeatureByCompatKey', () => {
+    test('should resolve valid BCD key to parent feature and canonical key', () => {
+      const match = getFeatureByCompatKey('api.Scheduler.yield');
+      assert.ok(match, 'Expected api.Scheduler.yield to be found');
+      assert.strictEqual(match.featureId, 'scheduler');
+      assert.strictEqual(match.compatKey, 'api.Scheduler.yield');
+      assert.strictEqual(match.feature.name, 'Scheduler API');
+    });
+
+    test('should resolve case-insensitively while returning canonical key', () => {
+      const match = getFeatureByCompatKey('api.scheduler.yield');
+      assert.ok(match, 'Expected case-insensitive match to be found');
+      assert.strictEqual(match.featureId, 'scheduler');
+      assert.strictEqual(match.compatKey, 'api.Scheduler.yield');
+    });
+
+    test('should return undefined for unknown BCD key', () => {
+      assert.strictEqual(getFeatureByCompatKey('api.Scheduler.nonexistent'), undefined);
+      assert.strictEqual(getFeatureByCompatKey('nonexistent.key'), undefined);
+    });
+  });
+
+  suite('isValidCompatKey', () => {
+    test('should return true for valid BCD key', () => {
+      assert.strictEqual(isValidCompatKey('api.Scheduler.yield'), true);
+      assert.strictEqual(isValidCompatKey('css.properties.accent-color'), true);
+    });
+
+    test('should return false for invalid BCD key', () => {
+      assert.strictEqual(isValidCompatKey('api.Scheduler.nonexistent'), false);
+      assert.strictEqual(isValidCompatKey('not-a-key'), false);
     });
   });
 });

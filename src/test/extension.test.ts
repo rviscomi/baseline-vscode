@@ -27,6 +27,16 @@ suite('Baseline Patterns Test Suite', () => {
 			assert.strictEqual(extractFeatureId('/* baseline/flexbox */'.match(PATTERNS.PREFIX.full)!), 'flexbox');
 		});
 
+		test('should match BCD keys in baseline/ prefix', () => {
+			const match1 = 'Check out baseline/api.Scheduler.yield results'.match(PATTERNS.PREFIX.full);
+			assert.ok(match1, 'Should match');
+			assert.strictEqual(match1[1], 'api.Scheduler.yield');
+
+			const match2 = 'Check out baseline/api.Scheduler.yield.'.match(PATTERNS.PREFIX.full);
+			assert.ok(match2, 'Should match');
+			assert.strictEqual(match2[1], 'api.Scheduler.yield');
+		});
+
 		test('should not match file paths or image assets', () => {
 			assert.strictEqual('/images/baseline/baseline-widely-icon-dark.svg'.match(PATTERNS.PREFIX.full), null);
 			assert.strictEqual('<img src="/images/baseline/baseline-widely-icon.svg" />'.match(PATTERNS.PREFIX.full), null);
@@ -119,6 +129,20 @@ suite('Baseline Patterns Test Suite', () => {
 			const match = text.match(PATTERNS.TODO.full);
 			assert.ok(match, 'Should match');
 			assert.strictEqual(extractFeatureId(match), 'aspect-ratio');
+		});
+
+		test('should match TODO(baseline/api.Scheduler.yield)', () => {
+			const text = '// TODO(baseline/api.Scheduler.yield): Remove setTimeout fallback in yieldToMain and invoke scheduler.yield() directly.';
+			const match = text.match(PATTERNS.TODO.full);
+			assert.ok(match, 'Should match');
+			assert.strictEqual(match[1], 'api.Scheduler.yield');
+		});
+
+		test('should match BCD keys with multiple segments and builtins', () => {
+			const text = 'TODO(baseline/javascript.builtins.Array.flat)';
+			const match = text.match(PATTERNS.TODO.full);
+			assert.ok(match, 'Should match');
+			assert.strictEqual(match[1], 'javascript.builtins.Array.flat');
 		});
 
 		test('should trigger on todo prefix', () => {

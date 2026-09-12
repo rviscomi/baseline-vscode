@@ -110,5 +110,49 @@ suite('Utils Test Suite', () => {
 			assert.strictEqual(matches.length, 1);
 			assert.strictEqual(matches[0].featureId, 'flexbox');
 		});
+
+		test('should find and resolve standalone BCD key in TODO comment', () => {
+			const line = '// TODO(baseline/api.Scheduler.yield): Remove setTimeout fallback in yieldToMain and invoke scheduler.yield() directly.';
+			const mockDoc = {
+				lineAt() {
+					return { text: line };
+				}
+			} as unknown as vscode.TextDocument;
+
+			const matches = findFeatureIdsInLine(mockDoc, 0);
+			assert.strictEqual(matches.length, 1);
+			assert.strictEqual(matches[0].featureId, 'scheduler');
+			assert.strictEqual(matches[0].compatKey, 'api.Scheduler.yield');
+			assert.strictEqual(matches[0].startingIndex, line.indexOf('api.Scheduler.yield'));
+			assert.strictEqual(matches[0].endingIndex, line.indexOf('api.Scheduler.yield') + 'api.Scheduler.yield'.length);
+		});
+
+		test('should find and resolve standalone BCD key in baseline/ prefix comment', () => {
+			const line = '// baseline/api.Scheduler.yield';
+			const mockDoc = {
+				lineAt() {
+					return { text: line };
+				}
+			} as unknown as vscode.TextDocument;
+
+			const matches = findFeatureIdsInLine(mockDoc, 0);
+			assert.strictEqual(matches.length, 1);
+			assert.strictEqual(matches[0].featureId, 'scheduler');
+			assert.strictEqual(matches[0].compatKey, 'api.Scheduler.yield');
+		});
+
+		test('should keep unresolved BCD key as featureId when not found in web-features', () => {
+			const line = '// TODO(baseline/api.Scheduler.nonexistent)';
+			const mockDoc = {
+				lineAt() {
+					return { text: line };
+				}
+			} as unknown as vscode.TextDocument;
+
+			const matches = findFeatureIdsInLine(mockDoc, 0);
+			assert.strictEqual(matches.length, 1);
+			assert.strictEqual(matches[0].featureId, 'api.scheduler.nonexistent');
+			assert.strictEqual(matches[0].compatKey, undefined);
+		});
 	});
 });
