@@ -12,8 +12,51 @@ suite('Baseline Patterns Test Suite', () => {
 			assert.strictEqual(extractFeatureId(match), 'flexbox');
 		});
 
+		test('should match at the end of a sentence with a period', () => {
+			const text = 'Check out baseline/flexbox.';
+			const match = text.match(PATTERNS.PREFIX.full);
+			assert.ok(match, 'Should match');
+			assert.strictEqual(extractFeatureId(match), 'flexbox');
+		});
+
+		test('should match in parentheses, quotes, and comments', () => {
+			assert.strictEqual(extractFeatureId('(baseline/flexbox)'.match(PATTERNS.PREFIX.full)!), 'flexbox');
+			assert.strictEqual(extractFeatureId('"baseline/flexbox"'.match(PATTERNS.PREFIX.full)!), 'flexbox');
+			assert.strictEqual(extractFeatureId('\'baseline/flexbox\''.match(PATTERNS.PREFIX.full)!), 'flexbox');
+			assert.strictEqual(extractFeatureId('// baseline/flexbox'.match(PATTERNS.PREFIX.full)!), 'flexbox');
+			assert.strictEqual(extractFeatureId('/* baseline/flexbox */'.match(PATTERNS.PREFIX.full)!), 'flexbox');
+		});
+
+		test('should not match file paths or image assets', () => {
+			assert.strictEqual('/images/baseline/baseline-widely-icon-dark.svg'.match(PATTERNS.PREFIX.full), null);
+			assert.strictEqual('<img src="/images/baseline/baseline-widely-icon.svg" />'.match(PATTERNS.PREFIX.full), null);
+			assert.strictEqual('images/baseline/baseline-widely-icon.svg'.match(PATTERNS.PREFIX.full), null);
+			assert.strictEqual('./baseline/baseline-widely-icon.svg'.match(PATTERNS.PREFIX.full), null);
+			assert.strictEqual('../baseline/flexbox'.match(PATTERNS.PREFIX.full), null);
+			assert.strictEqual('/baseline/flexbox'.match(PATTERNS.PREFIX.full), null);
+			assert.strictEqual('https://example.com/baseline/flexbox'.match(PATTERNS.PREFIX.full), null);
+		});
+
+		test('should not match files with extensions or subdirectories', () => {
+			assert.strictEqual('baseline/baseline-widely-icon.svg'.match(PATTERNS.PREFIX.full), null);
+			assert.strictEqual('baseline/flexbox.svg'.match(PATTERNS.PREFIX.full), null);
+			assert.strictEqual('baseline/grid.png'.match(PATTERNS.PREFIX.full), null);
+			assert.strictEqual('baseline/flexbox.js'.match(PATTERNS.PREFIX.full), null);
+			assert.strictEqual('baseline/flexbox/index.html'.match(PATTERNS.PREFIX.full), null);
+		});
+
 		test('should trigger on baseline/', () => {
 			assert.ok('baseline/'.match(PATTERNS.PREFIX.trigger), 'Should trigger');
+			assert.ok('// baseline/'.match(PATTERNS.PREFIX.trigger), 'Should trigger');
+			assert.ok('(baseline/'.match(PATTERNS.PREFIX.trigger), 'Should trigger');
+		});
+
+		test('should not trigger on path prefixes', () => {
+			assert.strictEqual('/images/baseline/'.match(PATTERNS.PREFIX.trigger), null);
+			assert.strictEqual('images/baseline/'.match(PATTERNS.PREFIX.trigger), null);
+			assert.strictEqual('./baseline/'.match(PATTERNS.PREFIX.trigger), null);
+			assert.strictEqual('../baseline/'.match(PATTERNS.PREFIX.trigger), null);
+			assert.strictEqual('https://example.com/baseline/'.match(PATTERNS.PREFIX.trigger), null);
 		});
 	});
 

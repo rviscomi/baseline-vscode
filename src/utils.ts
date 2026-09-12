@@ -74,7 +74,16 @@ export function findFeatureIdsInLine(document: vscode.TextDocument, lineIndex: n
 	// Sort matches by startingIndex to maintain chronological document order
 	matches.sort((a, b) => a.startingIndex - b.startingIndex);
 
-	return matches;
+	// Deduplicate matches that span the same range and featureId
+	const uniqueMatches = matches.filter((match, index, self) =>
+		index === self.findIndex(m =>
+			m.startingIndex === match.startingIndex &&
+			m.endingIndex === match.endingIndex &&
+			m.featureId === match.featureId
+		)
+	);
+
+	return uniqueMatches;
 }
 
 export function getBaselineStatus(status?: FeatureStatus) {

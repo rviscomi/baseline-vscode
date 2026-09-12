@@ -78,5 +78,37 @@ suite('Utils Test Suite', () => {
 			assert.strictEqual(matches[0].startingIndex, 20);
 			assert.strictEqual(matches[0].endingIndex, 84);
 		});
+
+		test('should not find feature IDs in baseline icon asset paths and markup', () => {
+			const lines = [
+				'<picture class="baseline-badge-icon" aria-hidden="true">',
+				'<source srcset="/images/baseline/baseline-widely-icon-dark.svg" media="(prefers-color-scheme: dark)">',
+				'<img src="/images/baseline/baseline-widely-icon.svg" alt="" width="18" height="10" />',
+				'</picture>'
+			];
+
+			for (const text of lines) {
+				const mockDoc = {
+					lineAt() {
+						return { text };
+					}
+				} as unknown as vscode.TextDocument;
+
+				const matches = findFeatureIdsInLine(mockDoc, 0);
+				assert.strictEqual(matches.length, 0, `Expected 0 matches for: ${text}`);
+			}
+		});
+
+		test('should deduplicate identical matches when multiple patterns match', () => {
+			const mockDoc = {
+				lineAt() {
+					return { text: '// TODO(baseline/flexbox)' };
+				}
+			} as unknown as vscode.TextDocument;
+
+			const matches = findFeatureIdsInLine(mockDoc, 0);
+			assert.strictEqual(matches.length, 1);
+			assert.strictEqual(matches[0].featureId, 'flexbox');
+		});
 	});
 });

@@ -36,8 +36,8 @@ export const IGNORE_LIST = [
 
 export const PATTERNS = {
 	PREFIX: {
-		full: /baseline\/([a-z-]+)\b/i,
-		trigger: /baseline\/$/
+		full: /(?<![/\\.\w-])baseline\/([a-z-]+)(?![/\w-]|(?:\.[a-z0-9]))/i,
+		trigger: /(?<![/\\.\w-])baseline\/$/
 	},
 	TAG: {
 		full: /<baseline-status[^>]*featureId=['"]?([a-z-]+)['"]?/i,
