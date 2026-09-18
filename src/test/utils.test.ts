@@ -79,6 +79,36 @@ suite('Utils Test Suite', () => {
 			assert.strictEqual(matches[0].endingIndex, 84);
 		});
 
+		test('should find feature ID in FEATURE_FALLBACKS macro', () => {
+			const mockDoc = {
+				lineAt() {
+					return { text: '{{ FEATURE_FALLBACKS("webauthn") }}' };
+				}
+			} as unknown as vscode.TextDocument;
+
+			const matches = findFeatureIdsInLine(mockDoc, 0);
+			assert.strictEqual(matches.length, 1);
+			assert.strictEqual(matches[0].featureId, 'webauthn');
+			assert.strictEqual(matches[0].compatKey, undefined);
+			assert.strictEqual(matches[0].startingIndex, 22);
+			assert.strictEqual(matches[0].endingIndex, 30);
+		});
+
+		test('should find feature ID and compat key in dual parameter FEATURE_FALLBACKS macro', () => {
+			const mockDoc = {
+				lineAt() {
+					return { text: '{{ FEATURE_FALLBACKS("webauthn", "api.PublicKeyCredential.getClientCapabilities_static") }}' };
+				}
+			} as unknown as vscode.TextDocument;
+
+			const matches = findFeatureIdsInLine(mockDoc, 0);
+			assert.strictEqual(matches.length, 1);
+			assert.strictEqual(matches[0].featureId, 'webauthn');
+			assert.strictEqual(matches[0].compatKey, 'api.PublicKeyCredential.getClientCapabilities_static');
+			assert.strictEqual(matches[0].startingIndex, 22);
+			assert.strictEqual(matches[0].endingIndex, 86);
+		});
+
 		test('should not find feature IDs in baseline icon asset paths and markup', () => {
 			const lines = [
 				'<picture class="baseline-badge-icon" aria-hidden="true">',

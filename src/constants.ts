@@ -44,8 +44,8 @@ export const PATTERNS = {
 		trigger: /<baseline-status[^>]*featureId=['"]?$/
 	},
 	MACRO: {
-		full: /{{\s*(?:macros\.BaselineStatus|BASELINE_STATUS)\(\s*['"]?([a-z-]+)['"]?\s*(?:,\s*['"]?([^'"]+?)['"]?\s*)?\)\s*}}/i,
-		trigger: /{{\s*(?:macros\.BaselineStatus|BASELINE_STATUS)\(['"]?$/
+		full: /{{\s*(?:macros\.(?:BaselineStatus|FeatureFallbacks)|BASELINE_STATUS|FEATURE_FALLBACKS)\(\s*['"]?([a-z-]+)['"]?\s*(?:,\s*['"]?([^'"]+?)['"]?\s*)?\)\s*}}/i,
+		trigger: /{{\s*(?:macros\.(?:BaselineStatus|FeatureFallbacks)|BASELINE_STATUS|FEATURE_FALLBACKS)\(['"]?$/
 	},
 	TODO: {
 		full: /TODO\(baseline\/([a-zA-Z0-9_@-]+(?:\.[a-zA-Z0-9_@-]+)*)\)/i,

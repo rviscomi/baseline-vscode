@@ -114,12 +114,36 @@ suite('Baseline Patterns Test Suite', () => {
 			assert.strictEqual(extractFeatureId(match), 'accent-color');
 		});
 
+		test('should match {{ FEATURE_FALLBACKS("fetch-priority") }}', () => {
+			const text = '{{ FEATURE_FALLBACKS("fetch-priority") }}';
+			const match = text.match(PATTERNS.MACRO.full);
+			assert.ok(match, 'Should match');
+			assert.strictEqual(extractFeatureId(match), 'fetch-priority');
+		});
+
+		test('should match {{ FEATURE_FALLBACKS("webauthn", "api.PublicKeyCredential.getClientCapabilities_static") }}', () => {
+			const text = '{{ FEATURE_FALLBACKS("webauthn", "api.PublicKeyCredential.getClientCapabilities_static") }}';
+			const match = text.match(PATTERNS.MACRO.full);
+			assert.ok(match, 'Should match');
+			assert.strictEqual(match[1], 'webauthn');
+			assert.strictEqual(match[2], 'api.PublicKeyCredential.getClientCapabilities_static');
+		});
+
+		test('should match {{ macros.FeatureFallbacks("accent-color") }}', () => {
+			const text = '{{ macros.FeatureFallbacks("accent-color") }}';
+			const match = text.match(PATTERNS.MACRO.full);
+			assert.ok(match, 'Should match');
+			assert.strictEqual(extractFeatureId(match), 'accent-color');
+		});
+
 		test('should trigger on macro prefix', () => {
 			assert.ok('{{ BASELINE_STATUS("'.match(PATTERNS.MACRO.trigger), 'Should trigger');
+			assert.ok('{{ FEATURE_FALLBACKS("'.match(PATTERNS.MACRO.trigger), 'Should trigger');
 		});
 
 		test('should trigger on macros prefix', () => {
 			assert.ok('{{ macros.BaselineStatus("'.match(PATTERNS.MACRO.trigger), 'Should trigger');
+			assert.ok('{{ macros.FeatureFallbacks("'.match(PATTERNS.MACRO.trigger), 'Should trigger');
 		});
 	});
 
