@@ -68,7 +68,7 @@
     "test": "vscode-test"
   },
   "dependencies": {
-    "web-features": "^3.40.1"
+    "web-features": "^3.41.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
